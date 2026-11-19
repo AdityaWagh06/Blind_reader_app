@@ -172,7 +172,7 @@ def main():
             
             # Re-read button
             if st.button("🔄 Re-read Explanation", use_container_width=True):
-                st.audio(st.session_state.audio_data, format='audio/wav')
+                play_audio(st.session_state.audio_data)
             
             st.markdown('</div>', unsafe_allow_html=True)
 
