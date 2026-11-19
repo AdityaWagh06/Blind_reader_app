@@ -96,8 +96,8 @@ def main():
         st.markdown("""
         This app helps visually impaired users understand images by:
         1. **Captioning** the image using BLIP model
-        2. **Explaining** the content in an accessible way using T5
-        3. **Converting** the explanation to speech using Bark TTS
+        2. **Explaining** the content in an accessible way using Flan-T5
+        3. **Converting** the explanation to speech with offline text-to-speech
         
         All processing happens locally - no external APIs required!
         """)
