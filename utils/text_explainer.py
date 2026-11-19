@@ -49,7 +49,7 @@ class TextExplainer:
         """
         try:
             # Create the prompt for T5
-            prompt = f"Explain this for a visually impaired person in a helpful tone: {caption}"
+            prompt = f"Describe this scene in one complete sentence for a blind listener: {caption}"
             
             # Tokenize the input
             inputs = self.tokenizer.encode(
@@ -139,7 +139,7 @@ class TextExplainer:
                 "meme": f"Explain this meme for a visually impaired person, describing the humor and visual elements: {caption}",
                 "infographic": f"Describe this infographic for a visually impaired person, explaining the data and visual elements: {caption}",
                 "scene": f"Describe this scene for a visually impaired person, explaining what is happening: {caption}",
-                "general": f"Explain this for a visually impaired person in a helpful tone: {caption}"
+                "general": f"Describe this scene in one complete sentence for a blind listener: {caption}"
             }
             
             prompt = context_prompts.get(context_type, context_prompts["general"])
