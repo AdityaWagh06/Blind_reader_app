@@ -6,8 +6,8 @@ A fully offline Python application that helps visually impaired users understand
 
 - **🖼️ Image Upload**: Support for PNG, JPG, JPEG formats
 - **🔍 BLIP Captioning**: Uses Salesforce's BLIP model for accurate image descriptions
-- **💡 T5 Explanation**: Converts raw captions into accessible explanations using T5
-- **🔊 Text-to-Speech**: High-quality speech synthesis using Bark (with Coqui TTS fallback)
+- **💡 Flan-T5 Explanation**: Converts raw captions into accessible explanations using Flan-T5
+- **🔊 Text-to-Speech**: Offline speech with your OS voices (pyttsx3), with optional Coqui TTS or Bark
 - **🎨 Beautiful UI**: Modern Streamlit interface with custom styling
 - **🔄 Re-read Function**: Button to replay audio descriptions
 - **⚡ Offline Operation**: No external APIs required - everything runs locally
@@ -18,7 +18,7 @@ The application follows a modular pipeline:
 
 1. **Image Captioning** (`utils/image_captioning.py`): BLIP model generates raw captions
 2. **Text Explanation** (`utils/text_explainer.py`): T5 model creates accessible descriptions
-3. **Speech Synthesis** (`utils/tts_generator.py`): Bark/Coqui TTS converts text to audio
+3. **Speech Synthesis** (`utils/tts_generator.py`): pyttsx3 (or optional Coqui/Bark) converts text to audio
 4. **Web Interface** (`main.py`): Streamlit app orchestrates the entire process
 
 ## 📋 Requirements
@@ -66,8 +66,8 @@ The app will be available at `http://localhost:8501`
 
 ### Model Selection
 - **BLIP Model**: `Salesforce/blip-image-captioning-base`
-- **T5 Model**: `t5-small` (can be changed to `t5-base` for better quality)
-- **TTS Engine**: Bark (primary) with Coqui TTS fallback
+- **T5 Model**: `google/flan-t5-small` (can be changed to `google/flan-t5-base` for better quality)
+- **TTS Engine**: Coqui TTS if installed, otherwise pyttsx3 (built-in OS voices). Bark is supported but off by default because it is very slow on CPU
 
 ### Performance Optimization
 - **GPU**: Automatically detected and used if available
@@ -101,7 +101,7 @@ The app will be available at `http://localhost:8501`
 
 - **"Failed to load BLIP model"**: Check internet connection and try again
 - **"Failed to load T5 model"**: Verify transformers installation
-- **"TTS failed"**: Bark will automatically fallback to Coqui TTS
+- **"TTS failed"**: The app falls back from Coqui TTS to pyttsx3 automatically. On Linux, pyttsx3 needs espeak (`sudo apt install espeak`)
 
 ## 📁 Project Structure
 
@@ -113,8 +113,8 @@ blind_reader_app/
 ├── utils/                 # Utility modules
 │   ├── __init__.py
 │   ├── image_captioning.py    # BLIP image captioning
-│   ├── text_explainer.py      # T5 text explanation
-│   └── tts_generator.py       # Bark/Coqui TTS
+│   ├── text_explainer.py      # Flan-T5 text explanation
+│   └── tts_generator.py       # Text-to-speech (pyttsx3, optional Coqui/Bark)
 └── assets/                # Static assets
     └── sample.png          # Sample image for testing
 ```
@@ -137,6 +137,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Google** for the T5 model
 - **Suno AI** for Bark TTS
 - **Coqui AI** for Coqui TTS
+- **pyttsx3** for offline text-to-speech
 - **Streamlit** for the web framework
 
 ## 📞 Support
