@@ -130,6 +130,25 @@ class TTSGenerator:
             logger.error(f"Error in Coqui TTS: {str(e)}")
             raise RuntimeError(f"Coqui TTS failed: {str(e)}")
     
+    def _pyttsx3_tts(self, text: str) -> bytes:
+        """Convert text to speech using the OS voices via pyttsx3 (offline)"""
+        import os
+        import tempfile
+        import pyttsx3
+
+        fd, path = tempfile.mkstemp(suffix=".wav")
+        os.close(fd)
+        try:
+            # New engine per call: pyttsx3 engines are tied to the thread that created them
+            engine = pyttsx3.init()
+            engine.setProperty("rate", 160)
+            engine.save_to_file(text, path)
+            engine.runAndWait()
+            with open(path, "rb") as f:
+                return f.read()
+        finally:
+            os.remove(path)
+
     def _numpy_to_wav(self, audio_array: np.ndarray, sample_rate: int) -> bytes:
         """
         Convert numpy array to WAV format bytes
