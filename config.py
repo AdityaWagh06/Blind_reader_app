@@ -16,7 +16,7 @@ class Config:
     
     # Model configurations
     BLIP_MODEL = "Salesforce/blip-image-captioning-base"
-    T5_MODEL = "t5-small"  # Options: t5-small, t5-base, t5-large
+    T5_MODEL = "google/flan-t5-small"  # Options: google/flan-t5-small, google/flan-t5-base
     TTS_ENGINE = "bark"  # Options: bark, coqui
     
     # TTS settings
