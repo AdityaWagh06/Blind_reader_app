@@ -206,7 +206,7 @@ def process_image(uploaded_file, image):
             st.success("✅ Processing complete! Audio will play automatically.")
             
             # Auto-play audio
-            st.audio(audio_data, format='audio/wav', autoplay=True)
+            play_audio(audio_data)
             
     except Exception as e:
         logger.error(f"Error processing image: {str(e)}")
