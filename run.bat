@@ -29,15 +29,13 @@ REM Activate virtual environment
 echo Activating virtual environment...
 call venv\Scripts\activate.bat
 
-REM Install requirements if needed
-if not exist "venv\Lib\site-packages\streamlit" (
-    echo Installing requirements...
-    pip install -r requirements.txt
-    if errorlevel 1 (
-        echo ERROR: Failed to install requirements
-        pause
-        exit /b 1
-    )
+REM Install/update requirements (fast no-op when already satisfied)
+echo Checking requirements...
+python -m pip install -q -r requirements.txt
+if errorlevel 1 (
+    echo ERROR: Failed to install requirements
+    pause
+    exit /b 1
 )
 
 REM Run the application
