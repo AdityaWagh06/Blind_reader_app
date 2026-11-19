@@ -24,21 +24,22 @@ class TTSGenerator:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         logger.info(f"Using device: {self.device}")
         
-        try:
-            if use_bark:
-                self._init_bark()
-            else:
-                self._init_coqui_tts()
-                
-        except Exception as e:
-            logger.error(f"Error initializing TTS: {str(e)}")
-            # Fallback to Coqui TTS if Bark fails
-            if use_bark:
-                logger.info("Falling back to Coqui TTS...")
-                self.use_bark = False
-                self._init_coqui_tts()
-            else:
-                raise RuntimeError(f"Failed to initialize TTS: {str(e)}")
+        # Try engines in order: Bark -> Coqui -> pyttsx3 (OS voices, always available offline)
+        self.engine = None
+        engines = [("bark", self._init_bark), ("coqui", self._init_coqui_tts), ("pyttsx3", lambda: None)]
+        if not use_bark:
+            engines = engines[1:]
+        for name, init in engines:
+            try:
+                init()
+                self.engine = name
+                break
+            except Exception as e:
+                logger.warning(f"TTS engine '{name}' unavailable: {e}")
+        if self.engine is None:
+            raise RuntimeError("No TTS engine available")
+        self.use_bark = self.engine == "bark"
+        logger.info(f"Using TTS engine: {self.engine}")
     
     def _init_bark(self):
         """Initialize Bark TTS"""
@@ -89,10 +90,11 @@ class TTSGenerator:
             bytes: Audio data in WAV format
         """
         try:
-            if self.use_bark:
+            if self.engine == "bark":
                 return self._bark_tts(text, voice_preset)
-            else:
+            if self.engine == "coqui":
                 return self._coqui_tts(text)
+            return self._pyttsx3_tts(text)
                 
         except Exception as e:
             logger.error(f"Error in text-to-speech: {str(e)}")
