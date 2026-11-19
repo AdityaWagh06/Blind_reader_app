@@ -122,7 +122,12 @@ def main():
         
         if uploaded_file is not None:
             # Display the uploaded image
-            image = Image.open(uploaded_file)
+            try:
+                image = Image.open(uploaded_file)
+                image.load()
+            except Exception:
+                st.error("❌ Could not read this file as an image.")
+                return
             st.image(image, caption="Uploaded Image", use_column_width=True)
             
             # Process button
