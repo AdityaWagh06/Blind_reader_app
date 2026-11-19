@@ -99,6 +99,24 @@ def test_coqui_tts():
         logger.error(f"❌ Coqui TTS test failed: {e}")
         return False
 
+def test_tts():
+    """Test the default speech pipeline (Coqui if installed, otherwise pyttsx3)"""
+    logger.info("Testing text-to-speech...")
+
+    try:
+        from utils.tts_generator import TTSGenerator
+
+        tts = TTSGenerator(use_bark=False)
+        audio = tts.text_to_speech("Installation test.")
+        assert audio[:4] == b"RIFF", "output is not WAV audio"
+
+        logger.info(f"✅ {tts.engine} produced {len(audio)} bytes of WAV audio")
+        return True
+
+    except Exception as e:
+        logger.error(f"❌ Text-to-speech test failed: {e}")
+        return False
+
 def test_blip_model():
     """Test BLIP model loading"""
     logger.info("Testing BLIP model...")
@@ -179,8 +197,7 @@ def main():
     
     tests = [
         ("Package Imports", test_imports),
-        ("Bark TTS", test_bark_tts),
-        ("Coqui TTS", test_coqui_tts),
+        ("Text-to-Speech", test_tts),
         ("BLIP Model", test_blip_model),
         ("T5 Model", test_t5_model),
         ("Utility Modules", test_utils_modules),
