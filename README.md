@@ -116,7 +116,7 @@ blind_reader_app/
 │   ├── text_explainer.py      # T5 text explanation
 │   └── tts_generator.py       # Bark/Coqui TTS
 └── assets/                # Static assets
-    └── placeholder.jpg     # Placeholder image
+    └── sample.png          # Sample image for testing
 ```
 
 ## 🤝 Contributing
