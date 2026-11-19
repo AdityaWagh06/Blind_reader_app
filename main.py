@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1  # noqa: F401  (used as st.components.v1.html)
 import os
 import logging
 from PIL import Image
@@ -69,6 +70,17 @@ st.markdown("""
 def load_models():
     """Load models once per server process, shared across sessions"""
     return ImageCaptioner(), TextExplainer(), TTSGenerator(use_bark=False)
+
+
+def play_audio(audio_bytes):
+    """Speak the audio now. st.audio(autoplay=True) skips media it has already played, so re-reads stayed silent."""
+    st.session_state.play_count = st.session_state.get('play_count', 0) + 1
+    b64 = base64.b64encode(audio_bytes).decode()
+    # The counter makes each call new HTML so the iframe remounts and plays again
+    st.components.v1.html(
+        f'<audio autoplay src="data:audio/wav;base64,{b64}" data-n="{st.session_state.play_count}"></audio>',
+        height=0,
+    )
 
 
 def main():
