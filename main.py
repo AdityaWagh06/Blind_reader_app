@@ -65,6 +65,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+@st.cache_resource(show_spinner="📦 Loading AI models (first run downloads ~1 GB)...")
+def load_models():
+    """Load models once per server process, shared across sessions"""
+    return ImageCaptioner(), TextExplainer(), TTSGenerator(use_bark=False)
+
+
 def main():
     """Main application function"""
     
@@ -159,20 +165,8 @@ def process_image(uploaded_file, image):
     try:
         with st.spinner("🔄 Processing image... This may take 30-60 seconds on first run"):
             
-            # Initialize models (lazy loading)
-            if not st.session_state.get('models_loaded', False):
-                with st.spinner("📦 Loading AI models..."):
-                    captioner = ImageCaptioner()
-                    explainer = TextExplainer()
-                    tts_generator = TTSGenerator()
-                    st.session_state.models_loaded = True
-                    st.session_state.captioner = captioner
-                    st.session_state.explainer = explainer
-                    st.session_state.tts_generator = tts_generator
-            else:
-                captioner = st.session_state.captioner
-                explainer = st.session_state.explainer
-                tts_generator = st.session_state.tts_generator
+            captioner, explainer, tts_generator = load_models()
+            st.session_state.models_loaded = True
             
             # Step 1: Generate caption
             with st.spinner("🔍 Generating image caption..."):
