@@ -21,7 +21,6 @@ pyttsx3>=2.90
 # Additional utilities
 requests>=2.31.0
 scipy>=1.11.0
-librosa>=0.10.0
 
 # Optional: for better performance
 # Uncomment if you have CUDA and want to use GPU acceleration
