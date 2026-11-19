@@ -112,9 +112,9 @@ class TextExplainer:
             if not any(indicator in text.lower() for indicator in spatial_indicators):
                 # Try to add basic spatial context
                 if 'person' in text.lower() or 'people' in text.lower():
-                    text = text.replace('.', ' in the center of the image.')
+                    text = text[:-1] + ' in the center of the image.'
                 elif 'object' in text.lower() or 'item' in text.lower():
-                    text = text.replace('.', ' prominently displayed in the image.')
+                    text = text[:-1] + ' prominently displayed in the image.'
             
             return text
             
