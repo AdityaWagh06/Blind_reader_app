@@ -23,12 +23,17 @@ The application follows a modular pipeline:
 
 ## 📋 Requirements
 
-- Python 3.8+
+- Python 3.9+ (3.9–3.11 if you want the optional Coqui TTS)
 - 8GB+ RAM (recommended)
 - GPU support (optional, for faster processing)
 - Internet connection (only for initial model download)
 
 ## 🛠️ Installation
+
+### Quick Start (Windows)
+Run `run.bat`. It creates the virtual environment, installs the requirements and starts the app.
+
+### Manual Setup
 
 ### 1. Clone the Repository
 ```bash
