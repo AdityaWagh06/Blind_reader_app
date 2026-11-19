@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class TextExplainer:
     """Text explanation using T5 model for creating accessible descriptions"""
     
-    def __init__(self, model_name="t5-small"):
+    def __init__(self, model_name="google/flan-t5-small"):
         """
         Initialize the T5 model for text explanation
         
