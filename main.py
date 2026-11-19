@@ -128,7 +128,7 @@ def main():
             except Exception:
                 st.error("❌ Could not read this file as an image.")
                 return
-            st.image(image, caption="Uploaded Image", use_column_width=True)
+            st.image(image, caption="Uploaded Image", use_container_width=True)
             
             # Process button
             if st.button("🎯 Process Image", type="primary", use_container_width=True):
