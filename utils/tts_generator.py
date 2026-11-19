@@ -146,7 +146,7 @@ class TTSGenerator:
             import struct
             
             # Normalize audio to 16-bit range
-            audio_normalized = np.int16(audio_array * 32767)
+            audio_normalized = np.int16(np.clip(np.asarray(audio_array), -1, 1) * 32767)
             
             # Create WAV file in memory
             wav_buffer = io.BytesIO()
