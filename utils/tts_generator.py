@@ -217,9 +217,8 @@ class TTSGenerator:
     def get_audio_info(self) -> dict:
         """Get information about the current TTS setup"""
         info = {
-            "tts_engine": "Bark" if self.use_bark else "Coqui TTS",
+            "tts_engine": self.engine,
             "device": self.device,
-            "sample_rate": self.bark_sample_rate if self.use_bark else 22050
         }
         
         if self.use_bark:
