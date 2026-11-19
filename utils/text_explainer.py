@@ -67,8 +67,7 @@ class TextExplainer:
                     max_length=150,
                     num_beams=4,
                     early_stopping=True,
-                    do_sample=False,
-                    temperature=0.7
+                    do_sample=False
                 )
             
             # Decode the generated explanation
@@ -161,8 +160,7 @@ class TextExplainer:
                     max_length=150,
                     num_beams=4,
                     early_stopping=True,
-                    do_sample=False,
-                    temperature=0.7
+                    do_sample=False
                 )
             
             # Decode the generated explanation
