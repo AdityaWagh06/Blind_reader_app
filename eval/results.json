@@ -1,0 +1,310 @@
+{
+  "dataset": "lmms-lab/VizWiz-Caps (val split, held-out 5%, seed 42)",
+  "photos": 388,
+  "photos_marked_unreadable_by_humans": 50,
+  "models": {
+    "Original BLIP": {
+      "caption": {
+        "BLEU-1": 0.25353879296575993,
+        "BLEU-4": 0.049219994848553675,
+        "ROUGE-L": 0.25295940137221706,
+        "CIDEr": 0.4912218832738642
+      },
+      "quality_check": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 50,
+        "tn": 338,
+        "accuracy": 0.8711340206185567,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "avg_words": 9.06958762886598,
+      "seconds_per_photo": 0.35560692278380246,
+      "held_out_loss": 4.298442084457457,
+      "perplexity": 73.58506503749672
+    },
+    "Fine-tuned BLIP (ours)": {
+      "caption": {
+        "BLEU-1": 0.28339419378992264,
+        "BLEU-4": 0.1585735132472852,
+        "ROUGE-L": 0.2920471119107486,
+        "CIDEr": 1.6838752996347377
+      },
+      "quality_check": {
+        "tp": 45,
+        "fp": 142,
+        "fn": 5,
+        "tn": 196,
+        "accuracy": 0.6211340206185567,
+        "precision": 0.24064171122994651,
+        "recall": 0.9,
+        "f1": 0.379746835443038
+      },
+      "avg_words": 9.853092783505154,
+      "seconds_per_photo": 0.4363000472796332,
+      "held_out_loss": 2.2121702189024384,
+      "perplexity": 9.13552097543223
+    },
+    "Florence-2 (short caption)": {
+      "caption": {
+        "BLEU-1": 0.30542593433049875,
+        "BLEU-4": 0.0767399618863405,
+        "ROUGE-L": 0.2763250381557555,
+        "CIDEr": 0.7555856905415993
+      },
+      "quality_check": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 50,
+        "tn": 338,
+        "accuracy": 0.8711340206185567,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "avg_words": 10.510309278350515,
+      "seconds_per_photo": 0.41854553308683573
+    }
+  },
+  "calibration": {
+    "threshold": 0.4,
+    "tuned_on": 194,
+    "reported_on": 194,
+    "test_half": {
+      "tp": 18,
+      "fp": 5,
+      "fn": 17,
+      "tn": 154,
+      "accuracy": 0.8865979381443299,
+      "precision": 0.782608695652174,
+      "recall": 0.5142857142857142,
+      "f1": 0.6206896551724138
+    },
+    "curve": [
+      {
+        "threshold": 0.05,
+        "precision": 0.28859060402684567,
+        "recall": 0.86,
+        "f1": 0.43216080402010054
+      },
+      {
+        "threshold": 0.1,
+        "precision": 0.38613861386138615,
+        "recall": 0.78,
+        "f1": 0.5165562913907285
+      },
+      {
+        "threshold": 0.15,
+        "precision": 0.4794520547945205,
+        "recall": 0.7,
+        "f1": 0.5691056910569106
+      },
+      {
+        "threshold": 0.2,
+        "precision": 0.5333333333333333,
+        "recall": 0.64,
+        "f1": 0.5818181818181818
+      },
+      {
+        "threshold": 0.25,
+        "precision": 0.5714285714285714,
+        "recall": 0.56,
+        "f1": 0.5656565656565656
+      },
+      {
+        "threshold": 0.3,
+        "precision": 0.627906976744186,
+        "recall": 0.54,
+        "f1": 0.5806451612903226
+      },
+      {
+        "threshold": 0.35,
+        "precision": 0.65,
+        "recall": 0.52,
+        "f1": 0.5777777777777778
+      },
+      {
+        "threshold": 0.4,
+        "precision": 0.7222222222222222,
+        "recall": 0.52,
+        "f1": 0.6046511627906976
+      },
+      {
+        "threshold": 0.45,
+        "precision": 0.7272727272727273,
+        "recall": 0.48,
+        "f1": 0.5783132530120482
+      },
+      {
+        "threshold": 0.5,
+        "precision": 0.7272727272727273,
+        "recall": 0.48,
+        "f1": 0.5783132530120482
+      },
+      {
+        "threshold": 0.55,
+        "precision": 0.7931034482758621,
+        "recall": 0.46,
+        "f1": 0.5822784810126583
+      },
+      {
+        "threshold": 0.6,
+        "precision": 0.8148148148148148,
+        "recall": 0.44,
+        "f1": 0.5714285714285714
+      },
+      {
+        "threshold": 0.65,
+        "precision": 0.8076923076923077,
+        "recall": 0.42,
+        "f1": 0.5526315789473685
+      },
+      {
+        "threshold": 0.7,
+        "precision": 0.8095238095238095,
+        "recall": 0.34,
+        "f1": 0.47887323943661975
+      },
+      {
+        "threshold": 0.75,
+        "precision": 0.8125,
+        "recall": 0.26,
+        "f1": 0.3939393939393939
+      },
+      {
+        "threshold": 0.8,
+        "precision": 0.8666666666666667,
+        "recall": 0.26,
+        "f1": 0.4
+      },
+      {
+        "threshold": 0.85,
+        "precision": 0.8,
+        "recall": 0.16,
+        "f1": 0.26666666666666666
+      },
+      {
+        "threshold": 0.9,
+        "precision": 0.75,
+        "recall": 0.06,
+        "f1": 0.1111111111111111
+      },
+      {
+        "threshold": 0.95,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    ],
+    "test_half_caption_rule": {
+      "tp": 32,
+      "fp": 67,
+      "fn": 3,
+      "tn": 92,
+      "accuracy": 0.6391752577319587,
+      "precision": 0.32323232323232326,
+      "recall": 0.9142857142857143,
+      "f1": 0.4776119402985075
+    }
+  },
+  "examples": [
+    {
+      "row": 24,
+      "image_id": "23455",
+      "human": "A blue computer screen with white text showing stages of verifying files",
+      "Original BLIP": "a close up of a computer screen with text on it.",
+      "Fine-tuned BLIP (ours)": "quality issues are too severe to recognize visual content.",
+      "Florence-2 (short caption)": "A computer screen with a blue screen with text on it."
+    },
+    {
+      "row": 32,
+      "image_id": "23463",
+      "human": "A computer screen has several windows open and one says recent in red.",
+      "Original BLIP": "a close up view of a computer screen.",
+      "Fine-tuned BLIP (ours)": "quality issues are too severe to recognize visual content.",
+      "Florence-2 (short caption)": "A computer screen with a comment button on it."
+    },
+    {
+      "row": 39,
+      "image_id": "23470",
+      "human": "imagine how you would describe this image on the phone to a friend.",
+      "Original BLIP": "a woman laying on a bed in the dark.",
+      "Fine-tuned BLIP (ours)": "quality issues are too severe to recognize visual content.",
+      "Florence-2 (short caption)": "A person laying on a bed with their feet up."
+    },
+    {
+      "row": 48,
+      "image_id": "23479",
+      "human": "the reflection of two people hugging in front of the original pancake house door",
+      "Original BLIP": "a person standing in front of a glass door.",
+      "Fine-tuned BLIP (ours)": "the front of a store with a man standing in front of it.",
+      "Florence-2 (short caption)": "A man standing in front of a window with a sign that says the original pancake house."
+    },
+    {
+      "row": 56,
+      "image_id": "23487",
+      "human": "a black and white frame with some description of beef and seafood",
+      "Original BLIP": "a menu with a picture of a bird on it.",
+      "Fine-tuned BLIP (ours)": "a black framed menu with yellow and blue colors on it.",
+      "Florence-2 (short caption)": "A menu is displayed on a table in a restaurant."
+    },
+    {
+      "row": 91,
+      "image_id": "23522",
+      "human": "A blu ray disc with 3D features, contained within a blue case.",
+      "Original BLIP": "a close up of a dvd on a table.",
+      "Fine-tuned BLIP (ours)": "quality issues are too severe to recognize visual content.",
+      "Florence-2 (short caption)": "A magnifying glass with a picture of a person on it."
+    },
+    {
+      "row": 92,
+      "image_id": "23523",
+      "human": "a computer screen view of Windows 7 home page.",
+      "Original BLIP": "windows 7 home screen.",
+      "Fine-tuned BLIP (ours)": "a computer screen with a window 7 home screen on it.",
+      "Florence-2 (short caption)": "A computer screen with a Windows 7 home screen on it."
+    },
+    {
+      "row": 127,
+      "image_id": "23558",
+      "human": "I see a windows seven computer home premium",
+      "Original BLIP": "a flat screen tv.",
+      "Fine-tuned BLIP (ours)": "quality issues are too severe to recognize visual content.",
+      "Florence-2 (short caption)": "A computer monitor sitting on top of a desk."
+    },
+    {
+      "row": 130,
+      "image_id": "23561",
+      "human": "a picture of bookshelf taken from a computer screen",
+      "Original BLIP": "a computer screen with a picture of a person on it.",
+      "Fine-tuned BLIP (ours)": "quality issues are too severe to recognize visual content.",
+      "Florence-2 (short caption)": "A computer screen with a picture of a room on it."
+    },
+    {
+      "row": 143,
+      "image_id": "23574",
+      "human": "a pink paper of ingredient description and nutrition information",
+      "Original BLIP": "a red box sitting on top of a table.",
+      "Fine-tuned BLIP (ours)": "quality issues are too severe to recognize visual content.",
+      "Florence-2 (short caption)": "A box of food sitting on top of a wooden table."
+    },
+    {
+      "row": 146,
+      "image_id": "23577",
+      "human": "a desktop computer with the utility manager dialogue open",
+      "Original BLIP": "a laptop computer sitting on top of a desk.",
+      "Fine-tuned BLIP (ours)": "a black toshiba laptop computer screen with a pop up window on it.",
+      "Florence-2 (short caption)": "A laptop computer sitting on top of a desk."
+    },
+    {
+      "row": 147,
+      "image_id": "23578",
+      "human": "appears to be a picture of a receipt",
+      "Original BLIP": "a piece of paper with a drawing on it.",
+      "Fine-tuned BLIP (ours)": "a piece of yellow paper with black ink on it.",
+      "Florence-2 (short caption)": "A piece of paper with a drawing on it."
+    }
+  ]
+}
