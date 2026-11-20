@@ -1,243 +1,155 @@
 # 👁️ Blind Reader Assistant
 
-A fully offline Python application that helps visually impaired users understand images by providing audio descriptions. The app uses open-source AI models to caption images, create accessible explanations, and convert them to speech.
+A private, offline website that helps blind and visually impaired people understand photos. Take or upload a picture and hear a **detailed description of everything in it**: objects, people, colours, where things are, and any text, read out word for word. It also **warns you when a photo is too blurry or dark** to describe.
+
+All AI runs on your own computer with free, open-source models from Hugging Face. There is no paid API, no account and no cloud upload.
 
 ![Blind Reader Assistant screenshot](assets/screenshot.png)
 
-## 🚀 Features
+## Features
 
-- **🖼️ Upload or Camera**: Upload a PNG/JPG or take a photo with your webcam
-- **⚡ Automatic**: Each new photo is described and read aloud straight away, with no extra button to find
-- **🔍 BLIP Captioning**: Uses Salesforce's BLIP model for accurate image descriptions
-- **💡 Flan-T5 Explanation**: Converts raw captions into accessible explanations using Flan-T5
-- **🔊 Text-to-Speech**: Offline speech with your OS voices (pyttsx3), with optional Coqui TTS or Bark
-- **🎨 Clean, accessible UI**: Large text, works in light and dark mode, screen-reader friendly
-- **🔄 Read Aloud Again**: One button to replay the description
-- **🧠 Bring your own model**: Swap in your own fine-tuned captioning model from the Hugging Face Hub
-- **⚡ Offline Operation**: No external APIs required - everything runs locally
+- **Detailed descriptions** by Microsoft Florence-2: small things count, e.g. *"There are two white remote controls resting on the couch next to them."*
+- **Reads text**: labels, medicine boxes, signs, screens and documents, line by line
+- **Knows when it can't see**: our own model, fine-tuned on 7,362 photos taken by blind people, flags unreadable photos and suggests how to retake them
+- **Speaks automatically** with the computer's built-in voices, with pause, resume, stop and speed controls
+- **Professional, accessible web UI**: upload, camera, drag-and-drop or paste; large text; light and dark themes; keyboard and screen-reader friendly
+- **Measured accuracy**: an Evaluation page with BLEU, ROUGE-L, CIDEr, held-out loss and precision/recall, explained in plain language
 
-## 🏗️ Architecture
+## Quick start
 
-The application follows a modular pipeline:
+**Windows:** double-click `run.bat`, then open **http://127.0.0.1:8000**.
 
-1. **Image Captioning** (`utils/image_captioning.py`): BLIP model generates raw captions
-2. **Text Explanation** (`utils/text_explainer.py`): T5 model creates accessible descriptions
-3. **Speech Synthesis** (`utils/tts_generator.py`): pyttsx3 (or optional Coqui/Bark) converts text to audio
-4. **Web Interface** (`main.py`): Streamlit app orchestrates the entire process
+**Any OS:**
 
-## 📋 Requirements
-
-- Python 3.9+ (3.9–3.11 if you want the optional Coqui TTS)
-- 8GB+ RAM (recommended)
-- GPU support (optional, for faster processing)
-- Internet connection (only for initial model download)
-
-## 🛠️ Installation
-
-### Quick Start (Windows)
-Run `run.bat`. It creates the virtual environment, installs the requirements and starts the app.
-
-### Manual Setup
-
-### 1. Clone the Repository
 ```bash
 git clone https://github.com/AdityaWagh06/Blind_reader_app.git
 cd Blind_reader_app
-```
-
-### 2. Create Virtual Environment
-```bash
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-### 3. Install Dependencies
-```bash
+venv\Scripts\activate          # macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
+python app.py                   # then open http://127.0.0.1:8000
 ```
 
-### 4. Run the Application
-```bash
-streamlit run main.py
+The first start downloads the two models (about 1.4 GB) from Hugging Face. After that everything works offline. Check an installation end to end with `python test_installation.py`.
+
+Requirements: Python 3.9+, about 4 GB of free RAM. A GPU is optional (CPU: 10–25 s per photo).
+
+## How it works
+
+```
+photo ──► fine-tuned BLIP ─────────► one-line summary + "is it too blurry?" (probability)
+      └─► Florence-2 ──────────────► detailed paragraph description
+                    └─(if text)────► OCR: every line of text
+                                       │
+           browser (Web Speech API) ◄──┘  reads it aloud
 ```
 
-The app will be available at `http://localhost:8501`
+| Step | Model | Size | Why |
+|---|---|---|---|
+| Summary & blurry-photo check | [`adityawagh07/blip-vizwiz`](https://huggingface.co/adityawagh07/blip-vizwiz): our fine-tune of [`Salesforce/blip-image-captioning-base`](https://huggingface.co/Salesforce/blip-image-captioning-base) | 0.25B params | Specialised for photos taken by blind people |
+| Detailed description & text reading | [`florence-community/Florence-2-base`](https://huggingface.co/florence-community/Florence-2-base) (Microsoft, MIT) | 0.23B params | Rich detail and OCR in one small model |
+| Speech | Browser Web Speech API | built in | Instant, offline, with pause and speed |
 
-## 🎯 Usage
+The website itself explains everything in depth on its **How it works** and **Evaluation** pages.
 
-1. **Choose a photo**: Upload one, or switch to the **Camera** tab and take one
-2. **Listen**: The description appears and is read aloud automatically (the first run downloads the models, about 1 GB)
-3. **Replay**: Press **Read aloud again**
-4. **Details**: Open **Details** to see the raw caption and processing time
+## Our fine-tuned model
 
-## 🔧 Configuration
+BLIP was fine-tuned on [VizWiz-Captions](https://huggingface.co/datasets/lmms-lab/VizWiz-Caps), real photos taken by blind people with human-written descriptions, on a free Google Colab T4 GPU:
 
-### Model Selection
-- **BLIP Model**: [`adityawagh07/blip-vizwiz`](https://huggingface.co/adityawagh07/blip-vizwiz), our BLIP fine-tuned on VizWiz (base: `Salesforce/blip-image-captioning-base`)
-- **T5 Model**: `google/flan-t5-small` (can be changed to `google/flan-t5-base` for better quality)
-- **TTS Engine**: Coqui TTS if installed, otherwise pyttsx3 (built-in OS voices). Bark is supported but off by default because it is very slow on CPU
+- 7,750 captioned photos, split with seed 42 into **7,362 for training** and **388 held out for testing**
+- 3 epochs (1,383 steps of 16 photos), learning rate 5e-5, fp16, 27.5 minutes
+- Held-out loss after each epoch: 2.326 → **2.291** → 2.338. The best epoch (2) was kept automatically, before the model began to overfit.
 
-### Performance Optimization
-- **GPU**: Automatically detected and used if available
-- **CPU Fallback**: Works on CPU-only systems (slower but functional)
-- **Model Caching**: Models are cached after first download
+### Evaluation results
 
-## 🌐 APIs and Models
+Measured on the **388 held-out photos** (never seen in training) with `training/evaluate.py` on a Colab T4. Scores compare each model's caption with the one human caption per photo.
 
-The app calls **no paid or cloud API**. The only network access is a one-time download of model weights from the [Hugging Face Hub](https://huggingface.co); after that everything runs on your machine and photos never leave it.
+| Model | Held-out loss ↓ | Perplexity ↓ | BLEU-1 | BLEU-4 | ROUGE-L | CIDEr |
+|---|---|---|---|---|---|---|
+| Original BLIP | 4.298 | 73.6 | 0.254 | 0.049 | 0.253 | 0.491 |
+| **Fine-tuned BLIP (ours)** | **2.212** | **9.1** | 0.283 | **0.159** | **0.292** | **1.684** |
+| Florence-2 (short caption mode) | – | – | **0.305** | 0.077 | 0.276 | 0.756 |
 
-| Step | Model | Size | Runs on |
-|------|-------|------|---------|
-| See | [`adityawagh07/blip-vizwiz`](https://huggingface.co/adityawagh07/blip-vizwiz), fine-tuned from [`Salesforce/blip-image-captioning-base`](https://huggingface.co/Salesforce/blip-image-captioning-base) | ~900 MB | Local CPU/GPU |
-| Explain | [`google/flan-t5-small`](https://huggingface.co/google/flan-t5-small) | ~300 MB | Local CPU/GPU |
-| Speak | pyttsx3 (Windows SAPI5 / macOS NSSpeech / Linux espeak) | built in | Local |
+Fine-tuning cut the held-out loss by **49%** and raised CIDEr **3.4×**.
 
-Libraries: Hugging Face `transformers` + PyTorch for the models, Streamlit for the UI.
+**Detecting photos that are too blurry or dark to describe** (50 of the 388 were labelled so by humans):
 
-## 🧠 Use Your Own Model
+| Rule | Caught | False alarms | Missed | Precision | Recall | F1 |
+|---|---|---|---|---|---|---|
+| Original BLIP | 0 | 0 | 50 | – | 0% | 0% |
+| Fine-tuned, trusting its caption's first words (all 388) | 45 | 142 | 5 | 24.1% | 90.0% | 38.0% |
+| Fine-tuned, trusting its caption (194 report photos) | 32 | 67 | 3 | 32.3% | 91.4% | 47.8% |
+| **Fine-tuned, probability ≥ 0.4 (used by the app, same 194)** | 18 | **5** | 17 | **78.3%** | 51.4% | **62.1%** |
 
-The captioning model is set in `config.py`:
+The 0.4 threshold was picked on the other 194 held-out photos, so it is not tuned on the photos it is reported on. Calibrating cut false alarms from 67 to 5, at the cost of missing more blurry photos. The app also never refuses: it warns, skips text reading (OCR invents characters on blurry photos), and still describes the scene.
 
-```python
-BLIP_MODEL = "adityawagh07/blip-vizwiz"  # BLIP fine-tuned on VizWiz; base: "Salesforce/blip-image-captioning-base"
-```
+Reproduce: run the last cell of [`training/finetune_blip_colab.ipynb`](training/finetune_blip_colab.ipynb) in Colab, or `python training/evaluate.py` on any machine with a GPU. Every caption from every model is in `eval/predictions.csv`.
 
-Any BLIP captioning model on the Hugging Face Hub (or a local folder) works. You can also switch without editing code:
+### How the metrics work (short version)
 
-```powershell
-$env:BLIND_READER_BLIP_MODEL = "<your-username>/blip-vizwiz"; .un.bat
-```
+- **BLEU-1 / BLEU-4**: share of 1-word / up-to-4-word sequences in the model's caption that also appear in the human caption
+- **ROUGE-L**: longest run of words both captions share in the same order
+- **CIDEr**: n-gram similarity where informative words ("Pepsi", "medicine") count far more than common ones ("a", "the"). This is the main captioning metric.
+- **Held-out loss / perplexity**: how surprised the model is by the human's real caption on photos it never trained on (lower is better)
+- **Precision / recall / F1**: for the yes/no "too blurry?" decision, how often an alarm is right / how many blurry photos are caught / the balance of both
 
-## 📈 Our Fine-tuned Model: Results
+Full explanations with formulas and worked examples are on the website's Evaluation page.
 
-[`adityawagh07/blip-vizwiz`](https://huggingface.co/adityawagh07/blip-vizwiz) was trained on a free Colab T4 GPU in about 28 minutes: 7,362 VizWiz photos, 3 epochs, with 388 photos held out for evaluation. The best epoch (2) was kept automatically.
+## Train your own
 
-| Held-out loss (lower is better) | |
-|---|---|
-| Start of training | ~3.8 |
-| Epoch 1 | 2.326 |
-| **Epoch 2 (published)** | **2.291** |
-| Epoch 3 (started to overfit) | 2.338 |
+1. Open [`training/finetune_blip_colab.ipynb`](training/finetune_blip_colab.ipynb) in Google Colab and choose a free **T4 GPU** runtime.
+2. Add your Hugging Face **write** token as a Colab secret named `HF_TOKEN` (🔑 icon, enable notebook access).
+3. Run the cells. You'll get live TensorBoard charts, before and after captions, and the model is published to `https://huggingface.co/<you>/blip-vizwiz`.
+4. Put that name in `config.py` (`BLIP_MODEL`) or set `$env:BLIND_READER_BLIP_MODEL`.
 
-| Photo | Original BLIP | Fine-tuned |
+Quick local check of the training code (16 photos, 2 steps): `python training/finetune_blip.py --limit 16 --max_steps 2 --batch_size 2`
+
+## Configuration
+
+Settings live in `config.py`. Each can be overridden with an environment variable prefixed `BLIND_READER_`:
+
+| Setting | Default | Meaning |
 |---|---|---|
-| Two cats on a couch | two cats sleeping on a couch. | a couple of cats sleeping on top of a red couch. |
-| Same photo, heavily blurred | a pink background with a blur effect. | quality issues are too severe to recognize visual content. |
-| Drawing of a house | an image of a house in the middle of a field. | a house with a red roof and a yellow sun in the background. |
+| `BLIP_MODEL` | `adityawagh07/blip-vizwiz` | Summary + blurry-photo model |
+| `FLORENCE_MODEL` | `florence-community/Florence-2-base` | Detailed description + OCR (`-large` is more accurate, needs a GPU) |
+| `UNREADABLE_THRESHOLD` | calibrated value | Probability above which a photo is called too blurry |
+| `MAX_FILE_SIZE_MB` | `10` | Upload limit |
+| `HOST`, `PORT` | `127.0.0.1`, `8000` | Where the website is served |
 
-When the model reports a photo is unreadable, the app tells the user to retake it with tips instead of describing noise. **Known limitation:** it sometimes says this for photos a person could read, because many VizWiz training photos are labelled that way.
+## API
 
-## 🏋️ Fine-tuning on VizWiz (free)
+| Method | Path | Returns |
+|---|---|---|
+| `GET` | `/api/status` | whether the models are loaded |
+| `POST` | `/api/describe` (form field `image`) | `summary`, `description`, `text_lines`, `unclear`, `unreadable_probability`, `speech`, timings |
+| `GET` | `/api/eval` | evaluation results (local `eval/results.json` or the copy on the model's Hub page) |
 
-`training/` fine-tunes BLIP on [VizWiz-Captions](https://huggingface.co/datasets/lmms-lab/VizWiz-Caps): about 7,700 photos **taken by blind people**, often blurry, badly framed or of text, each with a human-written description. That is exactly the kind of photo this app receives, so it is the most useful thing to train on.
+Interactive API docs: http://127.0.0.1:8000/docs
 
-1. Open [`training/finetune_blip_colab.ipynb`](training/finetune_blip_colab.ipynb) in Google Colab and pick a free **T4 GPU** runtime.
-2. Run the cells. You sign in with your own Hugging Face write token; training takes roughly 30–45 minutes.
-3. The model is published free to `https://huggingface.co/<your-username>/blip-vizwiz`.
-4. Set `BLIP_MODEL` in `config.py` to that name.
-
-The notebook shows live loss charts with TensorBoard. To train on your own machine instead:
-
-```powershell
-pip install datasets accelerate tensorboard
-python training/finetune_blip.py --hub_repo <your-username>/blip-vizwiz
-tensorboard --logdir blip-vizwiz/logs   # live charts at http://localhost:6006
-```
-
-Quick check that everything works (16 photos, 2 steps, no upload):
-
-```powershell
-python training/finetune_blip.py --limit 16 --max_steps 2 --batch_size 2
-```
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Out of Memory Error**
-   - Reduce image size before uploading
-   - Close other applications
-   - Use CPU-only mode if GPU memory is insufficient
-
-2. **Model Download Issues**
-   - Check internet connection
-   - Clear HuggingFace cache: `rm -rf ~/.cache/huggingface/`
-
-3. **Audio Not Playing**
-   - Check browser audio settings
-   - Try different browser
-   - Verify system audio is working
-
-4. **Slow Processing**
-   - First run downloads models (30-60 seconds)
-   - Subsequent runs are faster
-   - GPU acceleration recommended for better performance
-
-### Error Messages
-
-- **"Failed to load BLIP model"**: Check internet connection and try again
-- **"Failed to load T5 model"**: Verify transformers installation
-- **"TTS failed"**: The app falls back from Coqui TTS to pyttsx3 automatically. On Linux, pyttsx3 needs espeak (`sudo apt install espeak`)
-
-## 📁 Project Structure
+## Project structure
 
 ```
-blind_reader_app/
-├── main.py                 # Main Streamlit application
-├── config.py               # Model names and settings
-├── .streamlit/config.toml  # UI theme
-├── training/               # Fine-tuning script and Colab notebook
-├── requirements.txt        # Python dependencies
-├── README.md              # This file
-├── utils/                 # Utility modules
-│   ├── __init__.py
-│   ├── image_captioning.py    # BLIP image captioning
-│   ├── text_explainer.py      # Flan-T5 text explanation
-│   └── tts_generator.py       # Text-to-speech (pyttsx3, optional Coqui/Bark)
-└── assets/                # Static assets
-    ├── sample.png          # Sample image for testing
-    └── screenshot.png      # README screenshot
+app.py                     FastAPI server: website + API
+config.py                  settings
+static/                    website (index.html, styles.css, app.js)
+utils/image_captioning.py  BLIP: summary + unreadable probability
+utils/scene_describer.py   Florence-2: detailed description + OCR
+training/finetune_blip.py  fine-tuning script
+training/finetune_blip_colab.ipynb  Colab notebook: train, publish, evaluate
+training/evaluate.py       held-out evaluation and threshold calibration
+eval/                      evaluation results and every prediction
+test_installation.py       end-to-end installation check
+run.bat / run.sh / run.py  launchers
 ```
 
-## 🤝 Contributing
+## Limitations
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+- Detailed descriptions can occasionally contain small mistakes, such as a wrong colour or count.
+- Florence-2's text reader can invent text (e.g. a stock-photo watermark on a blank image, or digits on a blurry label). The app therefore reads text only when the description mentions text and the photo is not flagged as unclear.
+- The blurry-photo check still misses about half of the truly unreadable photos at the chosen threshold, a deliberate trade-off for far fewer false alarms.
+- Captions are scored against one human caption per photo, so absolute BLEU and CIDEr values are lower than published benchmarks that use five.
+- On a CPU a photo takes 10–25 seconds; a GPU brings this to a few seconds.
 
-## 📄 License
+## Acknowledgments
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- **Salesforce** for the BLIP model
-- **Google** for the T5 model
-- **Suno AI** for Bark TTS
-- **Coqui AI** for Coqui TTS
-- **pyttsx3** for offline text-to-speech
-- **Streamlit** for the web framework
-
-## 📞 Support
-
-For issues and questions:
-1. Check the troubleshooting section above
-2. Search existing GitHub issues
-3. Create a new issue with detailed information
-
-## 🔮 Future Enhancements
-
-- [ ] Support for video files
-- [ ] Multiple language support
-- [ ] Custom voice selection
-- [ ] Batch processing
-- [ ] Mobile app version
-- [ ] Integration with screen readers
-- [ ] Real-time processing
-- [ ] Advanced accessibility features
-
----
-
-**Made with ❤️ for the visually impaired community** 
+Salesforce (BLIP), Microsoft (Florence-2), the VizWiz project and lmms-lab (dataset), Hugging Face (Transformers, Hub), FastAPI.
