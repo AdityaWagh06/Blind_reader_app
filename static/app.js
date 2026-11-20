@@ -89,9 +89,28 @@ function startSteps() {
   }, 6000);
 }
 
+// Phone photos are often over 10 MB, but the models only look at about 768 px,
+// so large photos are shrunk (and turned upright) before upload
+async function shrinkPhoto(file, maxSide = 2048) {
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+    if (scale === 1 && file.size <= 4 * 1024 * 1024) return file;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bmp.width * scale);
+    canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+    return blob ? new File([blob], (file.name || "photo").replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" }) : file;
+  } catch {
+    return file; // formats the browser cannot decode go to the server unchanged
+  }
+}
+
 async function handleFile(file) {
   if (busy) return;
   if (!file.type.startsWith("image/")) { showError("Please choose an image file, such as a JPG or PNG photo."); return; }
+  file = await shrinkPhoto(file);
   if (file.size > 10 * 1024 * 1024) { showError("This image is larger than 10 MB. Please choose a smaller photo."); return; }
 
   stopSpeaking();
