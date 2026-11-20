@@ -73,7 +73,7 @@ The app will be available at `http://localhost:8501`
 ## 🔧 Configuration
 
 ### Model Selection
-- **BLIP Model**: `Salesforce/blip-image-captioning-base`
+- **BLIP Model**: [`adityawagh07/blip-vizwiz`](https://huggingface.co/adityawagh07/blip-vizwiz), our BLIP fine-tuned on VizWiz (base: `Salesforce/blip-image-captioning-base`)
 - **T5 Model**: `google/flan-t5-small` (can be changed to `google/flan-t5-base` for better quality)
 - **TTS Engine**: Coqui TTS if installed, otherwise pyttsx3 (built-in OS voices). Bark is supported but off by default because it is very slow on CPU
 
@@ -88,7 +88,7 @@ The app calls **no paid or cloud API**. The only network access is a one-time do
 
 | Step | Model | Size | Runs on |
 |------|-------|------|---------|
-| See | [`Salesforce/blip-image-captioning-base`](https://huggingface.co/Salesforce/blip-image-captioning-base) (or your fine-tuned version) | ~1 GB | Local CPU/GPU |
+| See | [`adityawagh07/blip-vizwiz`](https://huggingface.co/adityawagh07/blip-vizwiz), fine-tuned from [`Salesforce/blip-image-captioning-base`](https://huggingface.co/Salesforce/blip-image-captioning-base) | ~900 MB | Local CPU/GPU |
 | Explain | [`google/flan-t5-small`](https://huggingface.co/google/flan-t5-small) | ~300 MB | Local CPU/GPU |
 | Speak | pyttsx3 (Windows SAPI5 / macOS NSSpeech / Linux espeak) | built in | Local |
 
@@ -99,7 +99,7 @@ Libraries: Hugging Face `transformers` + PyTorch for the models, Streamlit for t
 The captioning model is set in `config.py`:
 
 ```python
-BLIP_MODEL = "Salesforce/blip-image-captioning-base"  # or your fine-tuned Hub repo, e.g. "<user>/blip-vizwiz"
+BLIP_MODEL = "adityawagh07/blip-vizwiz"  # BLIP fine-tuned on VizWiz; base: "Salesforce/blip-image-captioning-base"
 ```
 
 Any BLIP captioning model on the Hugging Face Hub (or a local folder) works. You can also switch without editing code:
@@ -107,6 +107,25 @@ Any BLIP captioning model on the Hugging Face Hub (or a local folder) works. You
 ```powershell
 $env:BLIND_READER_BLIP_MODEL = "<your-username>/blip-vizwiz"; .un.bat
 ```
+
+## 📈 Our Fine-tuned Model: Results
+
+[`adityawagh07/blip-vizwiz`](https://huggingface.co/adityawagh07/blip-vizwiz) was trained on a free Colab T4 GPU in about 28 minutes: 7,362 VizWiz photos, 3 epochs, with 388 photos held out for evaluation. The best epoch (2) was kept automatically.
+
+| Held-out loss (lower is better) | |
+|---|---|
+| Start of training | ~3.8 |
+| Epoch 1 | 2.326 |
+| **Epoch 2 (published)** | **2.291** |
+| Epoch 3 (started to overfit) | 2.338 |
+
+| Photo | Original BLIP | Fine-tuned |
+|---|---|---|
+| Two cats on a couch | two cats sleeping on a couch. | a couple of cats sleeping on top of a red couch. |
+| Same photo, heavily blurred | a pink background with a blur effect. | quality issues are too severe to recognize visual content. |
+| Drawing of a house | an image of a house in the middle of a field. | a house with a red roof and a yellow sun in the background. |
+
+When the model reports a photo is unreadable, the app tells the user to retake it with tips instead of describing noise. **Known limitation:** it sometimes says this for photos a person could read, because many VizWiz training photos are labelled that way.
 
 ## 🏋️ Fine-tuning on VizWiz (free)
 
