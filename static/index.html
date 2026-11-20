@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blind Reader Assistant</title>
+  <meta name="description" content="Take or upload a photo and hear a detailed description of everything in it. Runs privately on your own computer.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M4 16s4.5-8 12-8 12 8 12 8-4.5 8-12 8S4 16 4 16z' fill='none' stroke='white' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='3.6' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#/" aria-label="Blind Reader Assistant, home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8"/><path d="M4 16s4.5-8 12-8 12 8 12 8-4.5 8-12 8S4 16 4 16z"/><circle cx="16" cy="16" r="3.6"/></svg>
+        <span>Blind Reader</span>
+      </a>
+      <nav aria-label="Main">
+        <a href="#/" data-route="/">Describe</a>
+        <a href="#/evaluation" data-route="/evaluation">Evaluation</a>
+        <a href="#/how-it-works" data-route="/how-it-works">How it works</a>
+      </nav>
+      <div class="status-pill" id="model-status" role="status" aria-live="polite">
+        <span class="dot"></span><span class="label">Loading AI models…</span>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <!-- ===================== DESCRIBE ===================== -->
+    <section class="view" data-view="/" aria-labelledby="describe-title">
+      <div class="hero">
+        <p class="eyebrow">Private · Offline · Free</p>
+        <h1 id="describe-title">Hear everything in a photo.</h1>
+        <p class="lede">Take or upload a picture and get a detailed spoken description: people, objects, colours, where things are, and any text, read out loud.</p>
+      </div>
+
+      <div class="describe-grid">
+        <div class="card input-card">
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-describedby="drop-hint"
+               aria-label="Choose a photo to describe. You can also drop or paste an image here.">
+            <svg class="drop-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="10" width="36" height="28" rx="5"/><circle cx="18" cy="21" r="4"/><path d="M6 32l10-9 9 8 6-5 11 9"/></svg>
+            <p class="drop-title">Drop a photo here</p>
+            <p class="drop-hint" id="drop-hint">or paste with Ctrl+V · JPG, PNG or WebP up to 10 MB</p>
+            <div class="drop-actions">
+              <button class="btn btn-primary" id="pick-btn" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0l-5 5m5-5l5 5M4 20h16"/></svg>
+                Upload photo
+              </button>
+              <button class="btn btn-secondary" id="camera-btn" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                Take photo
+              </button>
+            </div>
+            <input type="file" id="file-input" accept="image/*" hidden>
+            <input type="file" id="camera-input" accept="image/*" capture="environment" hidden>
+          </div>
+          <figure class="preview" id="preview" hidden>
+            <img id="preview-img" alt="The photo you chose">
+            <figcaption>
+              <span id="preview-name"></span>
+              <button class="link-btn" id="change-btn" type="button">Choose another photo</button>
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="card result-card" id="result-card" aria-live="polite" aria-busy="false">
+          <div class="empty-state" id="empty-state">
+            <div class="empty-illustration" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <h2>Your description appears here</h2>
+            <p>It is also read aloud automatically. Nothing is uploaded to the internet. Your photo stays on this computer.</p>
+          </div>
+
+          <div class="working" id="working" hidden>
+            <div class="spinner" aria-hidden="true"></div>
+            <h2>Looking at your photo…</h2>
+            <ol class="steps">
+              <li data-step="0">Checking the photo is clear</li>
+              <li data-step="1">Describing every detail</li>
+              <li data-step="2">Reading any text</li>
+            </ol>
+            <p class="muted small">Usually 10–25 seconds on this computer.</p>
+          </div>
+
+          <div class="error" id="error" role="alert" hidden></div>
+
+          <article class="result" id="result" hidden>
+            <div class="alert-unclear" id="unclear" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2zM12 10v5m0 3v.01"/></svg>
+              <div><strong>This photo looks blurry or unclear.</strong> <span id="retake-tip"></span></div>
+            </div>
+            <p class="eyebrow">In short</p>
+            <h2 class="summary" id="summary"></h2>
+            <p class="eyebrow">In detail</p>
+            <p class="description" id="description"></p>
+            <div class="text-found" id="text-found" hidden>
+              <p class="eyebrow">Text in the image</p>
+              <ul id="text-lines"></ul>
+            </div>
+            <div class="player" role="group" aria-label="Read aloud controls">
+              <button class="btn btn-primary" id="play-btn" type="button" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-play"><path d="M7 5v14l12-7z"/></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-pause"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+                <span>Read aloud</span>
+              </button>
+              <button class="btn btn-ghost" id="stop-btn" type="button">Stop</button>
+              <label class="speed">Speed
+                <select id="speed">
+                  <option value="0.8">Slow</option>
+                  <option value="1" selected>Normal</option>
+                  <option value="1.25">Fast</option>
+                  <option value="1.5">Faster</option>
+                </select>
+              </label>
+              <button class="btn btn-ghost" id="copy-btn" type="button">Copy text</button>
+            </div>
+            <label class="toggle"><input type="checkbox" id="autoplay" checked> Read new descriptions aloud automatically</label>
+            <p class="meta" id="meta"></p>
+          </article>
+        </div>
+      </div>
+
+      <ul class="features" aria-label="Highlights">
+        <li><strong>Detailed</strong><span>Objects, people, colours, positions and small things like a remote on a couch.</span></li>
+        <li><strong>Reads text</strong><span>Labels, signs, screens and documents are read out word for word.</span></li>
+        <li><strong>Knows when it can't see</strong><span>Trained on photos taken by blind people, so it warns you when a photo is too blurry.</span></li>
+        <li><strong>Private</strong><span>Runs entirely on your computer. No accounts, no cloud, no tracking.</span></li>
+      </ul>
+    </section>
+
+    <!-- ===================== EVALUATION ===================== -->
+    <section class="view" data-view="/evaluation" aria-labelledby="eval-title" hidden>
+      <div class="hero">
+        <p class="eyebrow">Measured, not guessed</p>
+        <h1 id="eval-title">How accurate is it?</h1>
+        <p class="lede" id="eval-lede">Every model was tested on the same photos it never saw during training: real photos taken by blind people, each with a description written by a human.</p>
+      </div>
+      <div id="eval-root"><div class="card"><p>Loading evaluation results…</p></div></div>
+    </section>
+
+    <!-- ===================== HOW IT WORKS ===================== -->
+    <section class="view" data-view="/how-it-works" aria-labelledby="how-title" hidden>
+      <div class="hero">
+        <p class="eyebrow">Under the hood</p>
+        <h1 id="how-title">How it works</h1>
+        <p class="lede">Three open-source AI steps run on your own computer. Here is everything, from the photo to the spoken words, and how the models were trained and tested.</p>
+      </div>
+      <div id="how-root"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Blind Reader Assistant · Open-source models from Hugging Face · Runs locally</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
