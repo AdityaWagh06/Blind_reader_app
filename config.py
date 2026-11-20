@@ -15,7 +15,7 @@ class Config:
     APP_DESCRIPTION = "An AI-powered assistant for visually impaired users"
     
     # Model configurations
-    BLIP_MODEL = "Salesforce/blip-image-captioning-base"
+    BLIP_MODEL = "Salesforce/blip-image-captioning-base"  # or your fine-tuned Hub repo, e.g. "<user>/blip-vizwiz"
     T5_MODEL = "google/flan-t5-small"  # Options: google/flan-t5-small, google/flan-t5-base
     TTS_ENGINE = "bark"  # Options: bark, coqui
     
@@ -149,6 +149,9 @@ if os.getenv("BLIND_READER_DEBUG"):
 
 if os.getenv("BLIND_READER_TTS_ENGINE"):
     Config.TTS_ENGINE = os.getenv("BLIND_READER_TTS_ENGINE")
+
+if os.getenv("BLIND_READER_BLIP_MODEL"):
+    Config.BLIP_MODEL = os.getenv("BLIND_READER_BLIP_MODEL")
 
 if os.getenv("BLIND_READER_T5_MODEL"):
     Config.T5_MODEL = os.getenv("BLIND_READER_T5_MODEL")
