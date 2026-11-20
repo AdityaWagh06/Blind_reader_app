@@ -9,7 +9,7 @@ REM Check if Python is installed
 python --version >nul 2>&1
 if errorlevel 1 (
     echo ERROR: Python is not installed or not in PATH
-    echo Please install Python 3.8 or higher from https://python.org
+    echo Please install Python 3.9 or higher from https://python.org
     pause
     exit /b 1
 )
@@ -41,10 +41,10 @@ if errorlevel 1 (
 REM Run the application
 echo.
 echo Starting Blind Reader Assistant...
-echo The app will open in your default web browser
-echo URL: http://localhost:8501
+echo Open the URL below in your web browser
+echo URL: http://127.0.0.1:8000
 echo Press Ctrl+C to stop the application
 echo.
-python -m streamlit run main.py
+python app.py
 
 pause 
