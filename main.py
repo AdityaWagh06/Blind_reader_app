@@ -1,10 +1,11 @@
 import streamlit as st
 import streamlit.components.v1  # noqa: F401  (used as st.components.v1.html)
-import os
 import logging
+import html
+import time
 from PIL import Image
-import io
 import base64
+from config import Config
 from utils.image_captioning import ImageCaptioner
 from utils.text_explainer import TextExplainer
 from utils.tts_generator import TTSGenerator
@@ -18,58 +19,33 @@ st.set_page_config(
     page_title="Blind Reader Assistant",
     page_icon="👁️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed",
 )
 
-# Custom CSS for better styling
+# Only sizes and spacing here: colours come from the theme so light and dark mode both stay readable
 st.markdown("""
 <style>
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
-        text-align: center;
-        margin-bottom: 2rem;
+    .block-container { padding-top: 2rem; max-width: 1200px; }
+    .hero h1 { font-size: 2.6rem; margin-bottom: 0.2rem; }
+    .hero p { font-size: 1.15rem; opacity: 0.8; margin-top: 0; }
+    .badges span {
+        display: inline-block; padding: 0.15rem 0.7rem; margin: 0 0.4rem 0.4rem 0;
+        border: 1px solid rgba(128,128,128,0.4); border-radius: 999px; font-size: 0.85rem;
     }
-    .sub-header {
-        font-size: 1.5rem;
-        color: #2c3e50;
-        margin-bottom: 1rem;
-    }
-    .info-box {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #1f77b4;
-        margin: 1rem 0;
-    }
-    .audio-player {
-        margin: 1rem 0;
-        padding: 1rem;
-        background-color: #e8f4fd;
-        border-radius: 0.5rem;
-    }
-    .caption-box {
-        background-color: #fff3cd;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border: 1px solid #ffeaa7;
-        margin: 1rem 0;
-    }
-    .explanation-box {
-        background-color: #d1ecf1;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border: 1px solid #bee5eb;
-        margin: 1rem 0;
-    }
+    .stMarkdown p.description { font-size: 1.6rem; line-height: 1.45; font-weight: 600; margin: 0.2rem 0 0.8rem; }
+    .stButton button { font-size: 1.1rem; padding: 0.6rem 1rem; }
 </style>
 """, unsafe_allow_html=True)
+
 
 @st.cache_resource(show_spinner="📦 Loading AI models (first run downloads ~1 GB)...")
 def load_models():
     """Load models once per server process, shared across sessions"""
-    return ImageCaptioner(), TextExplainer(), TTSGenerator(use_bark=False)
+    return (
+        ImageCaptioner(Config.BLIP_MODEL),
+        TextExplainer(Config.T5_MODEL),
+        TTSGenerator(use_bark=False),
+    )
 
 
 def play_audio(audio_bytes):
@@ -83,135 +59,110 @@ def play_audio(audio_bytes):
     )
 
 
+def render_sidebar():
+    with st.sidebar:
+        st.header("How it works")
+        st.markdown(f"""
+1. **See**: `{Config.BLIP_MODEL}` describes the photo.
+2. **Explain**: `{Config.T5_MODEL}` turns it into a clear sentence.
+3. **Speak**: your computer's built-in voice reads it aloud.
+""")
+        st.header("Privacy")
+        st.markdown("Everything runs on this computer. Photos are never uploaded to any server or API.")
+        st.header("Tips")
+        st.markdown("- Hold the camera steady, about 30 cm away.\n- Good light helps a lot.\n- Press **Read aloud again** to replay.")
+        st.caption(f"{Config.APP_NAME} v{Config.APP_VERSION}")
+
+
 def main():
     """Main application function"""
-    
-    # Header
-    st.markdown('<h1 class="main-header">👁️ Blind Reader Assistant</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; font-size: 1.2rem; color: #666;">Upload an image and get an audio description for visually impaired users</p>', unsafe_allow_html=True)
-    
-    # Sidebar
-    with st.sidebar:
-        st.header("ℹ️ About")
-        st.markdown("""
-        This app helps visually impaired users understand images by:
-        1. **Captioning** the image using BLIP model
-        2. **Explaining** the content in an accessible way using Flan-T5
-        3. **Converting** the explanation to speech with offline text-to-speech
-        
-        All processing happens locally - no external APIs required!
-        """)
-        
-        st.header("📋 Instructions")
-        st.markdown("""
-        1. Upload an image (PNG, JPG, JPEG)
-        2. Wait for processing (may take 30-60 seconds)
-        3. Listen to the audio description
-        4. Use the re-read button if needed
-        """)
-        
-        # Model status
-        st.header("🔧 Model Status")
-        if 'models_loaded' not in st.session_state:
-            st.session_state.models_loaded = False
-            
-        if st.session_state.models_loaded:
-            st.success("✅ All models loaded successfully")
-        else:
-            st.warning("⏳ Models loading... (first run)")
-    
-    # Main content area
-    col1, col2 = st.columns([1, 1])
-    
-    with col1:
-        st.markdown('<h2 class="sub-header">📤 Upload Image</h2>', unsafe_allow_html=True)
-        
-        uploaded_file = st.file_uploader(
-            "Choose an image file",
-            type=['png', 'jpg', 'jpeg'],
-            help="Upload an image to get an audio description"
-        )
-        
-        if uploaded_file is not None:
-            # Display the uploaded image
-            try:
-                image = Image.open(uploaded_file)
-                image.load()
-            except Exception:
-                st.error("❌ Could not read this file as an image.")
-                return
-            st.image(image, caption="Uploaded Image", use_container_width=True)
-            
-            # Process button
-            if st.button("🎯 Process Image", type="primary", use_container_width=True):
-                process_image(uploaded_file, image)
-    
-    with col2:
-        st.markdown('<h2 class="sub-header">📝 Results</h2>', unsafe_allow_html=True)
-        
-        # Display results if available
-        if 'caption' in st.session_state:
-            st.markdown('<div class="caption-box">', unsafe_allow_html=True)
-            st.markdown("**🔍 Raw Caption:**")
-            st.write(st.session_state.caption)
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        if 'explanation' in st.session_state:
-            st.markdown('<div class="explanation-box">', unsafe_allow_html=True)
-            st.markdown("**💡 Accessible Explanation:**")
-            st.write(st.session_state.explanation)
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Audio player
-        if 'audio_data' in st.session_state:
-            st.markdown('<div class="audio-player">', unsafe_allow_html=True)
-            st.markdown("**🔊 Audio Description:**")
-            
-            # Audio player
-            st.audio(st.session_state.audio_data, format='audio/wav')
-            
-            # Re-read button
-            if st.button("🔄 Re-read Explanation", use_container_width=True):
-                play_audio(st.session_state.audio_data)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
+    render_sidebar()
 
-def process_image(uploaded_file, image):
-    """Process the uploaded image through the complete pipeline"""
-    
+    st.markdown("""
+<div class="hero">
+  <h1>👁️ Blind Reader Assistant</h1>
+  <p>Take or upload a photo and hear what is in it.</p>
+  <div class="badges"><span>🔒 Runs offline</span><span>🆓 Free, open models</span><span>🔊 Speaks automatically</span></div>
+</div>
+""", unsafe_allow_html=True)
+
+    left, right = st.columns([1, 1], gap="large")
+
+    with left:
+        st.subheader("1. Choose a photo")
+        upload_tab, camera_tab = st.tabs(["📁 Upload", "📷 Camera"])
+        with upload_tab:
+            uploaded = st.file_uploader(
+                "Upload an image (PNG or JPG)",
+                type=[f.lstrip('.') for f in Config.SUPPORTED_IMAGE_FORMATS],
+            )
+        with camera_tab:
+            snapped = st.camera_input("Take a photo")
+
+        source = snapped or uploaded
+        image = None
+        if source is not None:
+            if source.size > Config.MAX_FILE_SIZE_MB * 1024 * 1024:
+                st.error(f"❌ This file is larger than {Config.MAX_FILE_SIZE_MB} MB. Please choose a smaller image.")
+                source = None
+            else:
+                try:
+                    image = Image.open(source)
+                    image.load()
+                except Exception:
+                    st.error("❌ Could not read this file as an image.")
+                    source = None
+        if image is not None:
+            st.image(image, caption="Your photo", use_container_width=True)
+
+    with right:
+        st.subheader("2. Hear the description")
+        # Describe each new photo automatically: one less button to find with a screen reader
+        if source is not None and st.session_state.get('image_key') != source.file_id:
+            st.session_state.image_key = source.file_id
+            process_image(image)
+
+        if 'explanation' not in st.session_state:
+            st.info("Your description will appear here and be read aloud as soon as you choose a photo.")
+            return
+
+        with st.container(border=True):
+            st.markdown(f'<p class="description" role="status">{html.escape(st.session_state.explanation)}</p>',
+                        unsafe_allow_html=True)
+            if st.button("🔊 Read aloud again", type="primary", use_container_width=True):
+                play_audio(st.session_state.audio_data)
+            st.audio(st.session_state.audio_data, format='audio/wav')
+
+        with st.expander("Details"):
+            st.markdown(f"**Raw caption:** {st.session_state.caption}")
+            st.markdown(f"**Processing time:** {st.session_state.elapsed:.1f} s")
+
+
+def process_image(image):
+    """Run caption -> explanation -> speech and store results in session_state"""
     try:
-        with st.spinner("🔄 Processing image... This may take 30-60 seconds on first run"):
-            
-            captioner, explainer, tts_generator = load_models()
-            st.session_state.models_loaded = True
-            
-            # Step 1: Generate caption
-            with st.spinner("🔍 Generating image caption..."):
-                caption = captioner.generate_caption(image)
-                st.session_state.caption = caption
-                logger.info(f"Generated caption: {caption}")
-            
-            # Step 2: Generate accessible explanation
-            with st.spinner("💡 Creating accessible explanation..."):
-                explanation = explainer.explain_for_visually_impaired(caption)
-                st.session_state.explanation = explanation
-                logger.info(f"Generated explanation: {explanation}")
-            
-            # Step 3: Convert to speech
-            with st.spinner("🔊 Converting to speech..."):
-                audio_data = tts_generator.text_to_speech(explanation)
-                st.session_state.audio_data = audio_data
-                logger.info("Audio generated successfully")
-            
-            st.success("✅ Processing complete! Audio will play automatically.")
-            
-            # Auto-play audio
-            play_audio(audio_data)
-            
+        captioner, explainer, tts_generator = load_models()
+        start = time.time()
+        with st.status("Describing your photo...", expanded=True) as status:
+            st.write("🔍 Looking at the image...")
+            caption = captioner.generate_caption(image)
+            st.write("💡 Writing a clear description...")
+            explanation = explainer.explain_for_visually_impaired(caption)
+            st.write("🔊 Preparing speech...")
+            audio_data = tts_generator.text_to_speech(explanation)
+            status.update(label="Done", state="complete", expanded=False)
+        logger.info(f"Caption: {caption} | Explanation: {explanation}")
+
+        st.session_state.update(caption=caption, explanation=explanation,
+                                audio_data=audio_data, elapsed=time.time() - start)
+        play_audio(audio_data)
+
     except Exception as e:
-        logger.error(f"Error processing image: {str(e)}")
-        st.error(f"❌ Error processing image: {str(e)}")
-        st.info("💡 Try uploading a different image or check the console for more details.")
+        logger.exception("Error processing image")
+        st.error(f"❌ Something went wrong while describing this photo: {e}")
+        for key in ('image_key', 'explanation'):  # allow a retry and don't show the previous photo's result
+            st.session_state.pop(key, None)
+
 
 if __name__ == "__main__":
-    main() 
+    main()
