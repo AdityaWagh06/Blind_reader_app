@@ -15,7 +15,7 @@ class Config:
     APP_DESCRIPTION = "An AI-powered assistant for visually impaired users"
     
     # Model configurations
-    BLIP_MODEL = "Salesforce/blip-image-captioning-base"  # or your fine-tuned Hub repo, e.g. "<user>/blip-vizwiz"
+    BLIP_MODEL = "adityawagh07/blip-vizwiz"  # BLIP fine-tuned on VizWiz; base: "Salesforce/blip-image-captioning-base"
     T5_MODEL = "google/flan-t5-small"  # Options: google/flan-t5-small, google/flan-t5-base
     TTS_ENGINE = "bark"  # Options: bark, coqui
     
