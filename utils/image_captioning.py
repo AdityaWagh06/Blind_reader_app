@@ -1,12 +1,8 @@
 import logging
+
 import torch
 from PIL import Image
-import requests
 from transformers import BlipProcessor, BlipForConditionalGeneration
-import warnings
-
-# Suppress warnings for cleaner output
-warnings.filterwarnings("ignore")
 
 logger = logging.getLogger(__name__)
 
@@ -109,47 +105,3 @@ class ImageCaptioner:
         except Exception as e:
             logger.error(f"Error generating caption: {str(e)}")
             raise RuntimeError(f"Failed to generate caption: {str(e)}")
-    
-    def generate_caption_with_prompt(self, image, prompt):
-        """
-        Generate a caption with a specific prompt
-        
-        Args:
-            image: PIL Image object
-            prompt: str, the prompt to guide caption generation
-            
-        Returns:
-            str: Generated caption
-        """
-        try:
-            # Preprocess the image
-            processed_image = self.preprocess_image(image)
-            
-            # Prepare inputs with prompt
-            inputs = self.processor(processed_image, text=prompt, return_tensors="pt")
-            inputs = {k: v.to(self.device) for k, v in inputs.items()}
-            
-            # Generate caption
-            with torch.no_grad():
-                outputs = self.model.generate(
-                    **inputs,
-                    max_length=50,
-                    num_beams=5,
-                    early_stopping=True,
-                    do_sample=False
-                )
-            
-            # Decode the generated caption
-            caption = self.processor.decode(outputs[0], skip_special_tokens=True)
-            
-            # Clean up the caption
-            caption = caption.strip()
-            if not caption.endswith('.'):
-                caption += '.'
-            
-            logger.info(f"Generated caption with prompt '{prompt}': {caption}")
-            return caption
-            
-        except Exception as e:
-            logger.error(f"Error generating caption with prompt: {str(e)}")
-            raise RuntimeError(f"Failed to generate caption with prompt: {str(e)}") 
