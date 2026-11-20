@@ -247,7 +247,7 @@ async function renderEvaluation() {
       <div class="kpi"><div class="label">Test photos (never seen in training)</div><div class="value">${r.photos}</div><div class="small muted">${r.photos_marked_unreadable_by_humans} marked too blurry by humans</div></div>
       <div class="kpi"><div class="label">Held-out loss, fine-tuned (lower is better)</div><div class="value">${fix(ours.held_out_loss, 2)}</div>${delta(ours.held_out_loss, base.held_out_loss, true)}</div>
       <div class="kpi"><div class="label">CIDEr, fine-tuned (higher is better)</div><div class="value">${fix(ours.caption.CIDEr, 2)}</div>${delta(ours.caption.CIDEr, base.caption.CIDEr)}</div>
-      <div class="kpi"><div class="label">"Too blurry" detection, F1</div><div class="value">${pct(ours.quality_check.f1)}</div><div class="small muted">original model: ${pct(base.quality_check.f1)}</div></div>
+      <div class="kpi"><div class="label">"Too blurry" detection, F1 (as used in the app)</div><div class="value">${pct((r.calibration ? r.calibration.test_half : ours.quality_check).f1)}</div><div class="small muted">original model: ${pct(base.quality_check.f1)}</div></div>
     </div>
 
     <div class="section">
@@ -273,8 +273,10 @@ async function renderEvaluation() {
       <div class="matrix-grid">${names.map(matrix).join("")}</div>
     </div>
 
+    ${r.calibration ? calibrationSection(r.calibration) : ""}
+
     <div class="section">
-      <h2>4 · Side-by-side examples</h2>
+      <h2>5 · Side-by-side examples</h2>
       <p class="intro">The first test photos, exactly as each model captioned them. The full list for all ${r.photos} photos is in <code>eval/predictions.csv</code>.</p>
       <div class="table-wrap"><table>
         <thead><tr><th>Human caption</th>${names.map((n) => `<th>${esc(n)}</th>`).join("")}</tr></thead>
@@ -282,18 +284,52 @@ async function renderEvaluation() {
     </div>
 
     <div class="section">
-      <h2>5 · What these results mean</h2>
-      <div class="callout">${interpretation(base, ours, flo)}</div>
+      <h2>6 · What these results mean</h2>
+      <div class="callout">${interpretation(base, ours, flo, r.calibration)}</div>
     </div>
     ${metricGuide()}
     <p class="small muted section">Data: ${esc(r.dataset)}. Reproduce with <code>python training/evaluate.py</code>.</p>`;
 }
 
-function interpretation(base, ours, flo) {
+function calibrationSection(cal) {
+  // Small dependency-free SVG line chart of precision / recall / F1 against the threshold
+  const W = 640, H = 260, L = 44, B = 36, T = 14, R = 14;
+  const x = (t) => L + ((t - 0.05) / 0.9) * (W - L - R);
+  const y = (v) => T + (1 - v) * (H - T - B);
+  const line = (key) => cal.curve.map((p, i) => `${i ? "L" : "M"}${x(p.threshold).toFixed(1)},${y(p[key]).toFixed(1)}`).join(" ");
+  const series = [["precision", "var(--good)", "Precision"], ["recall", "#f59e0b", "Recall"], ["f1", "var(--brand)", "F1"]];
+  const grid = [0, 0.25, 0.5, 0.75, 1].map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--border)"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${v * 100}%</text>`).join("");
+  const xt = [0.1, 0.3, 0.5, 0.7, 0.9].map((t) => `<text x="${x(t)}" y="${H - B + 18}" text-anchor="middle" font-size="11" fill="var(--muted)">${t}</text>`).join("");
+  const old = cal.test_half_caption_rule, now = cal.test_half;
+  const row = (label, q) => `<tr><th scope="row">${label}</th><td class="num">${q.tp}</td><td class="num">${q.fp}</td><td class="num">${q.fn}</td><td class="num">${pct(q.precision)}</td><td class="num">${pct(q.recall)}</td><td class="num"><b>${pct(q.f1)}</b></td></tr>`;
+  return `<div class="section">
+    <h2>4 · Calibrating the "too blurry" decision</h2>
+    <p class="intro">Instead of trusting the model's first words, the app asks <b>how sure</b> the model is that a photo is unreadable (a probability from 0 to 1) and flags it only above a threshold. Too low a threshold gives many false alarms; too high misses blurry photos. We tried thresholds from 0.05 to 0.95 on <b>${cal.tuned_on} photos</b>, picked the one with the best F1 (<b>${cal.threshold}</b>), and report the result on the <b>other ${cal.reported_on} photos</b>, which were never used to pick it. That keeps the score honest.</p>
+    <div class="card">
+      <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Precision, recall and F1 for each threshold. The chosen threshold is ${cal.threshold}.">
+        ${grid}${xt}
+        <text x="${(W + L) / 2}" y="${H - 4}" text-anchor="middle" font-size="12" fill="var(--muted)">threshold (how sure the model must be)</text>
+        <line x1="${x(cal.threshold)}" x2="${x(cal.threshold)}" y1="${T}" y2="${H - B}" stroke="var(--ink-2)" stroke-dasharray="4 4"/>
+        <text x="${x(cal.threshold) + 6}" y="${T + 12}" font-size="12" fill="var(--ink-2)">chosen: ${cal.threshold}</text>
+        ${series.map(([k, c]) => `<path d="${line(k)}" fill="none" stroke="${c}" stroke-width="3" stroke-linejoin="round"/>`).join("")}
+      </svg>
+      <p class="small">${series.map(([, c, n]) => `<span style="display:inline-flex;align-items:center;gap:.35rem;margin-right:1rem"><span style="width:14px;height:4px;border-radius:2px;background:${c}"></span>${n}</span>`).join("")}</p>
+    </div>
+    <div class="table-wrap section" style="margin-top:1rem"><table>
+      <thead><tr><th>Rule (on the ${cal.reported_on} report photos)</th><th>Caught</th><th>False alarms</th><th>Missed</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead>
+      <tbody>${row("Before: trust the caption's first words", old)}${row(`After: probability ≥ ${cal.threshold} (used by the app)`, now)}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function interpretation(base, ours, flo, cal) {
   const lossDrop = ((base.held_out_loss - ours.held_out_loss) / base.held_out_loss) * 100;
   const q = ours.quality_check;
+  const fixNote = cal
+    ? `Calibrating the decision (section 4) changes this: on photos not used for tuning, F1 goes from ${pct(cal.test_half_caption_rule.f1)} to ${pct(cal.test_half.f1)}, with ${cal.test_half.fp} false alarms instead of ${cal.test_half_caption_rule.fp}.`
+    : "";
   return `<p><b>Fine-tuning worked on what it was trained for.</b> On photos it never saw, the fine-tuned BLIP's held-out loss is ${lossDrop.toFixed(0)}% lower than the original's (${fix(base.held_out_loss, 2)} → ${fix(ours.held_out_loss, 2)}). Its captions match human wording better, with CIDEr going from ${fix(base.caption.CIDEr, 2)} to ${fix(ours.caption.CIDEr, 2)}, and it learned to flag unreadable photos: it catches ${q.tp} of ${q.tp + q.fn} (recall ${pct(q.recall)}), where the original model catches ${base.quality_check.tp}.</p>
-  <p><b>The weak spot is false alarms.</b> It also called ${q.fp} readable photos "too blurry" (precision ${pct(q.precision)}). That is why the app does not stop when this happens: it warns the user, suggests retaking the photo, and still gives the full description from Florence-2.</p>
+  <p><b>Its first weak spot was false alarms.</b> Trusting its caption's first words, it called ${q.fp} readable photos "too blurry" (precision ${pct(q.precision)}). ${fixNote} The app also never stops at a warning: it suggests retaking the photo and still gives the full description from Florence-2.</p>
   <p><b>Florence-2 writes the detailed description</b> because it describes many more objects, positions and any text. Its short captions score ${fix(flo.caption.CIDEr, 2)} CIDEr here. Its long, detailed descriptions cannot be scored fairly against one-sentence human captions (see "Why the detailed description is not in this table" below).</p>`;
 }
 
@@ -342,7 +378,7 @@ function renderHowItWorks() {
   $("#how-root").innerHTML = `
     <div class="pipeline" aria-label="Processing pipeline">
       <div class="stage"><div class="num">1</div><h3>Photo</h3><p>Uploaded, taken with the camera, dropped or pasted. It is sent only to the app's own server on this computer.</p></div>
-      <div class="stage"><div class="num">2</div><h3>Summary + quality check</h3><p><b>BLIP fine-tuned on VizWiz</b> writes a one-line summary, or says the photo is too blurry.</p></div>
+      <div class="stage"><div class="num">2</div><h3>Summary + quality check</h3><p><b>BLIP fine-tuned on VizWiz</b> writes a one-line summary and estimates how likely the photo is too blurry. Above a calibrated threshold, the user is warned.</p></div>
       <div class="stage"><div class="num">3</div><h3>Detailed description</h3><p><b>Florence-2</b> describes everything: objects, people, colours, positions.</p></div>
       <div class="stage"><div class="num">4</div><h3>Text reading</h3><p>If the description mentions text, Florence-2's <b>OCR</b> reads it line by line.</p></div>
       <div class="stage"><div class="num">5</div><h3>Speech</h3><p>The browser reads it aloud with the computer's built-in voice, with pause and speed controls.</p></div>
@@ -378,7 +414,7 @@ function renderHowItWorks() {
           <p>For each photo, the model predicts the human's caption one word at a time. The <b>loss</b> measures how wrong those predictions were. Backpropagation then nudges the model's ~250 million numbers (weights) slightly so the next prediction is a little better. Repeated 1,383 times, the model adapts to blind users' photos.</p></div>
         <div class="card"><h3>What it learned, honestly</h3>
           <p><b>Better:</b> lower held-out loss, captions closer to human wording, and it now recognises unreadable photos.</p>
-          <p><b>Trade-off:</b> it sometimes calls a readable photo "too blurry" (a false alarm). The app handles this by warning instead of refusing, and Florence-2 still describes the photo.</p></div>
+          <p><b>Trade-off we found and fixed:</b> about 1 in 7 training captions is the same sentence, "Quality issues are too severe…", so the model learned to say it even when only ~10% sure, and called sharp photos blurry. We now use the model's <i>probability</i> with a threshold calibrated on held-out photos (Evaluation page, section 4). The app also warns instead of refusing, and Florence-2 still describes the photo.</p></div>
       </div>
     </div>
 
@@ -400,7 +436,8 @@ function renderHowItWorks() {
       <details><summary>Why use two models instead of one?</summary><p>Each does what it is best at. Our fine-tuned BLIP is specialised for blind users' photos and spotting unreadable ones. Florence-2 gives much richer detail and can read text. Using both gives a quick summary, a safety warning and a detailed description.</p></details>
       <details><summary>Why did you fine-tune instead of training from scratch?</summary><p>Training a vision-language model from scratch needs millions of images and expensive hardware. Fine-tuning starts from BLIP, which already understands images, and adapts it with 7,362 specialised photos in under 30 minutes on a free GPU. This is called transfer learning.</p></details>
       <details><summary>How do you know the model is not just memorising?</summary><p>All test scores use 388 photos that were never shown during training. We also watched the held-out loss after every epoch and kept the best epoch, before the model started to overfit.</p></details>
-      <details><summary>What is the biggest limitation?</summary><p>False "too blurry" alarms from the fine-tuned model, and that detailed descriptions can occasionally contain small mistakes (for example a wrong colour). The app always shows what each model said so users and developers can judge.</p></details>
+      <details><summary>What is the biggest limitation?</summary><p>Detailed descriptions can occasionally contain small mistakes (for example a wrong colour or count), and the blurry-photo check still makes some mistakes in both directions. The Evaluation page shows exactly how many. Captions were scored against one human caption per photo, so absolute scores are lower than published benchmarks that use five.</p></details>
+      <details><summary>What is calibration, and why did you need it?</summary><p>A model's single best answer can hide how unsure it is. Our model often answered "quality issues…" while being only about 10% sure, because that exact sentence was very common in training. Calibration means choosing, from data, how sure the model must be before we act on its answer. We picked the threshold on half of the held-out photos and measured it on the other half, so the reported improvement is not tuned on its own test data.</p></details>
       <details><summary>How fast is it?</summary><p>About 10–25 seconds per photo on a laptop CPU, mostly for the detailed description. With a GPU it takes 1–3 seconds.</p></details>
       <details><summary>How would you improve it next?</summary><p>Balance the training data so "too blurry" is predicted less often, train on all 5 human captions per VizWiz photo, use the larger Florence-2 model on a GPU, and run a study with blind users to rate the descriptions.</p></details>
     </div>`;
