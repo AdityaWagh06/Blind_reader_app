@@ -1,0 +1,14 @@
+[client]
+# Hide developer menus (Deploy, rerun) for end users
+toolbarMode = "viewer"
+
+[server]
+# Matches Config.MAX_FILE_SIZE_MB
+maxUploadSize = 10
+
+[browser]
+# Keep the "nothing leaves your machine" promise: no Streamlit telemetry
+gatherUsageStats = false
+
+[theme]
+primaryColor = "#2563eb"
