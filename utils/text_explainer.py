@@ -47,6 +47,11 @@ class TextExplainer:
         Returns:
             str: Accessible explanation text
         """
+        # The VizWiz-tuned captioner flags unreadable photos with this phrase; give actionable advice instead
+        if caption.lower().startswith("quality issues"):
+            return ("I can't make out this photo clearly. Please try again: hold the camera steady, "
+                    "about 30 centimetres away, with more light.")
+
         try:
             # Create the prompt for T5
             prompt = f"Describe this scene in one complete sentence for a blind listener: {caption}"
