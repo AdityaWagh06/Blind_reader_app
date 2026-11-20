@@ -2,14 +2,18 @@
 
 A fully offline Python application that helps visually impaired users understand images by providing audio descriptions. The app uses open-source AI models to caption images, create accessible explanations, and convert them to speech.
 
+![Blind Reader Assistant screenshot](assets/screenshot.png)
+
 ## 🚀 Features
 
-- **🖼️ Image Upload**: Support for PNG, JPG, JPEG formats
+- **🖼️ Upload or Camera**: Upload a PNG/JPG or take a photo with your webcam
+- **⚡ Automatic**: Each new photo is described and read aloud straight away, with no extra button to find
 - **🔍 BLIP Captioning**: Uses Salesforce's BLIP model for accurate image descriptions
 - **💡 Flan-T5 Explanation**: Converts raw captions into accessible explanations using Flan-T5
 - **🔊 Text-to-Speech**: Offline speech with your OS voices (pyttsx3), with optional Coqui TTS or Bark
-- **🎨 Beautiful UI**: Modern Streamlit interface with custom styling
-- **🔄 Re-read Function**: Button to replay audio descriptions
+- **🎨 Clean, accessible UI**: Large text, works in light and dark mode, screen-reader friendly
+- **🔄 Read Aloud Again**: One button to replay the description
+- **🧠 Bring your own model**: Swap in your own fine-tuned captioning model from the Hugging Face Hub
 - **⚡ Offline Operation**: No external APIs required - everything runs locally
 
 ## 🏗️ Architecture
@@ -37,8 +41,8 @@ Run `run.bat`. It creates the virtual environment, installs the requirements and
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository-url>
-cd blind_reader_app
+git clone https://github.com/AdityaWagh06/Blind_reader_app.git
+cd Blind_reader_app
 ```
 
 ### 2. Create Virtual Environment
@@ -61,11 +65,10 @@ The app will be available at `http://localhost:8501`
 
 ## 🎯 Usage
 
-1. **Upload Image**: Click "Browse files" and select an image (PNG, JPG, JPEG)
-2. **Process**: Click "Process Image" button
-3. **Wait**: The first run may take 30-60 seconds as models download
-4. **Listen**: Audio description will play automatically
-5. **Re-read**: Use the "Re-read Explanation" button to replay audio
+1. **Choose a photo**: Upload one, or switch to the **Camera** tab and take one
+2. **Listen**: The description appears and is read aloud automatically (the first run downloads the models, about 1 GB)
+3. **Replay**: Press **Read aloud again**
+4. **Details**: Open **Details** to see the raw caption and processing time
 
 ## 🔧 Configuration
 
@@ -78,6 +81,55 @@ The app will be available at `http://localhost:8501`
 - **GPU**: Automatically detected and used if available
 - **CPU Fallback**: Works on CPU-only systems (slower but functional)
 - **Model Caching**: Models are cached after first download
+
+## 🌐 APIs and Models
+
+The app calls **no paid or cloud API**. The only network access is a one-time download of model weights from the [Hugging Face Hub](https://huggingface.co); after that everything runs on your machine and photos never leave it.
+
+| Step | Model | Size | Runs on |
+|------|-------|------|---------|
+| See | [`Salesforce/blip-image-captioning-base`](https://huggingface.co/Salesforce/blip-image-captioning-base) (or your fine-tuned version) | ~1 GB | Local CPU/GPU |
+| Explain | [`google/flan-t5-small`](https://huggingface.co/google/flan-t5-small) | ~300 MB | Local CPU/GPU |
+| Speak | pyttsx3 (Windows SAPI5 / macOS NSSpeech / Linux espeak) | built in | Local |
+
+Libraries: Hugging Face `transformers` + PyTorch for the models, Streamlit for the UI.
+
+## 🧠 Use Your Own Model
+
+The captioning model is set in `config.py`:
+
+```python
+BLIP_MODEL = "Salesforce/blip-image-captioning-base"  # or your fine-tuned Hub repo, e.g. "<user>/blip-vizwiz"
+```
+
+Any BLIP captioning model on the Hugging Face Hub (or a local folder) works. You can also switch without editing code:
+
+```powershell
+$env:BLIND_READER_BLIP_MODEL = "<your-username>/blip-vizwiz"; .un.bat
+```
+
+## 🏋️ Fine-tuning on VizWiz (free)
+
+`training/` fine-tunes BLIP on [VizWiz-Captions](https://huggingface.co/datasets/lmms-lab/VizWiz-Caps): about 7,700 photos **taken by blind people**, often blurry, badly framed or of text, each with a human-written description. That is exactly the kind of photo this app receives, so it is the most useful thing to train on.
+
+1. Open [`training/finetune_blip_colab.ipynb`](training/finetune_blip_colab.ipynb) in Google Colab and pick a free **T4 GPU** runtime.
+2. Run the cells. You sign in with your own Hugging Face write token; training takes roughly 30–45 minutes.
+3. The model is published free to `https://huggingface.co/<your-username>/blip-vizwiz`.
+4. Set `BLIP_MODEL` in `config.py` to that name.
+
+The notebook shows live loss charts with TensorBoard. To train on your own machine instead:
+
+```powershell
+pip install datasets accelerate tensorboard
+python training/finetune_blip.py --hub_repo <your-username>/blip-vizwiz
+tensorboard --logdir blip-vizwiz/logs   # live charts at http://localhost:6006
+```
+
+Quick check that everything works (16 photos, 2 steps, no upload):
+
+```powershell
+python training/finetune_blip.py --limit 16 --max_steps 2 --batch_size 2
+```
 
 ## 🐛 Troubleshooting
 
@@ -113,6 +165,9 @@ The app will be available at `http://localhost:8501`
 ```
 blind_reader_app/
 ├── main.py                 # Main Streamlit application
+├── config.py               # Model names and settings
+├── .streamlit/config.toml  # UI theme
+├── training/               # Fine-tuning script and Colab notebook
 ├── requirements.txt        # Python dependencies
 ├── README.md              # This file
 ├── utils/                 # Utility modules
@@ -121,7 +176,8 @@ blind_reader_app/
 │   ├── text_explainer.py      # Flan-T5 text explanation
 │   └── tts_generator.py       # Text-to-speech (pyttsx3, optional Coqui/Bark)
 └── assets/                # Static assets
-    └── sample.png          # Sample image for testing
+    ├── sample.png          # Sample image for testing
+    └── screenshot.png      # README screenshot
 ```
 
 ## 🤝 Contributing
