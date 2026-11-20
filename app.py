@@ -81,6 +81,9 @@ def describe(image: UploadFile = File(...)):
         img.load()
         # Phone cameras store rotation in EXIF; without this a portrait label is read sideways
         img = ImageOps.exif_transpose(img).convert("RGB")
+    except Image.DecompressionBombError:
+        # a small file can still decode to billions of pixels and exhaust memory
+        raise HTTPException(413, "This image has too many pixels. Please use a normal photo.")
     except (UnidentifiedImageError, OSError):
         raise HTTPException(415, "That file is not an image we can read. Please use a JPG, PNG or WebP photo.")
     if model_error:
