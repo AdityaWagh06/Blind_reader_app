@@ -13,16 +13,16 @@ logger = logging.getLogger(__name__)
 class ImageCaptioner:
     """Image captioning using BLIP model from Salesforce"""
     
-    def __init__(self):
+    def __init__(self, model_name="Salesforce/blip-image-captioning-base"):
         """Initialize the BLIP model for image captioning"""
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         logger.info(f"Using device: {self.device}")
         
         try:
             # Load BLIP model and processor
-            logger.info("Loading BLIP model for image captioning...")
-            self.processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-            self.model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
+            logger.info(f"Loading BLIP model {model_name}...")
+            self.processor = BlipProcessor.from_pretrained(model_name)
+            self.model = BlipForConditionalGeneration.from_pretrained(model_name)
             
             # Move model to appropriate device
             self.model.to(self.device)
