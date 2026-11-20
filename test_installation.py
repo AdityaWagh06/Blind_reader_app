@@ -33,7 +33,10 @@ def main():
     print(f"OK  detail model ({Config.FLORENCE_MODEL}): {description!r}  [{time.time() - t:.1f}s incl. loading]")
     assert len(description.split()) >= 5, "description too short"
 
-    assert describer.read_text(Image.new("RGB", (64, 64), "white")) == [], "blank image should have no text"
+    # Florence-2 OCR alone can hallucinate stock-photo watermarks on empty images, so the app only reads
+    # text when the description mentions some; check that gate keeps a blank image silent
+    blank = describer.describe(Image.new("RGB", (640, 480), "white"))
+    assert not describer.mentions_text(blank), f"blank image would trigger text reading: {blank!r}"
     speech = build_speech(True, "A cat.", ["EXIT"])
     assert speech.startswith("This photo looks blurry") and "reads: EXIT." in speech
     print("OK  text reading and speech assembly")
