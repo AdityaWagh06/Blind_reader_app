@@ -29,3 +29,9 @@ for _key in ("BLIP_MODEL", "FLORENCE_MODEL", "UNREADABLE_THRESHOLD", "MAX_FILE_S
     _value = os.getenv(f"BLIND_READER_{_key}")
     if _value:
         setattr(Config, _key, type(getattr(Config, _key))(_value))
+
+# Fail at startup with a clear message rather than flagging every photo (or none) later
+if not 0 < Config.UNREADABLE_THRESHOLD < 1:
+    raise ValueError(f"UNREADABLE_THRESHOLD must be between 0 and 1, got {Config.UNREADABLE_THRESHOLD}")
+if Config.MAX_FILE_SIZE_MB <= 0:
+    raise ValueError(f"MAX_FILE_SIZE_MB must be positive, got {Config.MAX_FILE_SIZE_MB}")
