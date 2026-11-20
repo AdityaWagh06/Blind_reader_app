@@ -18,7 +18,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.staticfiles import StaticFiles
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from config import Config
 
@@ -79,7 +79,8 @@ def describe(image: UploadFile = File(...)):
     try:
         img = Image.open(io.BytesIO(data))
         img.load()
-        img = img.convert("RGB")
+        # Phone cameras store rotation in EXIF; without this a portrait label is read sideways
+        img = ImageOps.exif_transpose(img).convert("RGB")
     except (UnidentifiedImageError, OSError):
         raise HTTPException(415, "That file is not an image we can read. Please use a JPG, PNG or WebP photo.")
     if model_error:
