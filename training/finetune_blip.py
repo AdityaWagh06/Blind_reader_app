@@ -39,7 +39,8 @@ def load_data(args):
         ds = Dataset.from_list(rows)
     else:
         # data_files limits the download to this split; without it every split (~7.5 GB) is fetched
-        ds = load_dataset(args.dataset, split=args.split, data_files={args.split: f"data/{args.split}-*.parquet"})
+        ds = load_dataset(args.dataset, split=args.split, data_files={args.split: f"data/{args.split}-*.parquet"},
+                      verification_mode="no_checks")  # the card also lists splits we did not download
     ds = ds.filter(lambda c: bool(c and c.strip()), input_columns="caption")
     split = ds.train_test_split(test_size=args.eval_fraction, seed=42)
     print(f"train: {len(split['train'])} examples, eval: {len(split['test'])} examples")

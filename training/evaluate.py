@@ -109,7 +109,8 @@ def main():
     p.add_argument("--push_to", default=None, help="Hub model repo to upload eval/ files to, e.g. you/blip-vizwiz")
     args = p.parse_args()
 
-    ds = load_dataset(args.dataset, split=args.split, data_files={args.split: f"data/{args.split}-*.parquet"})
+    ds = load_dataset(args.dataset, split=args.split, data_files={args.split: f"data/{args.split}-*.parquet"},
+                      verification_mode="no_checks")  # the card also lists splits we did not download
     wanted = held_out_indices(len(ds), args.eval_fraction, args.seed)[: args.limit]
     ds = ds.select(wanted)
     print(f"Evaluating on {len(ds)} held-out photos", flush=True)
