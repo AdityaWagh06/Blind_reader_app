@@ -54,11 +54,6 @@ models/
 *.bin
 *.safetensors
 
-# Audio files (generated during runtime)
-*.wav
-*.mp3
-*.ogg
-
 # Temporary files
 *.tmp
 *.temp
@@ -82,15 +77,10 @@ Thumbs.db
 # Linux
 *~
 
-# IDE
-.vscode/
-.idea/
+# Editors
 *.swp
 *.swo
-*~
 
-# Project specific
-# Uncomment if you want to exclude model downloads
-# models/
-# *.bin
-# *.safetensors 
+# Training outputs and test caches
+blip-vizwiz/
+.pytest_cache/
