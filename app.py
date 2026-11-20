@@ -26,7 +26,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 logger = logging.getLogger("blind_reader")
 
 ROOT = Path(__file__).parent
-RETAKE_TIP = "Try again holding the camera steady, about 30 centimetres away, with more light."
+RETAKE_TIP = ("Try again holding the camera steady, about 30 centimetres away, with more light. "
+              "Text is not read out from unclear photos, because it could be wrong.")
 
 @asynccontextmanager
 async def lifespan(_app):
@@ -99,7 +100,8 @@ def describe(image: UploadFile = File(...)):
         timings["description"] = time.time() - t
 
         text_lines = []
-        if models["describer"].mentions_text(description):
+        # OCR invents characters on blurry photos; reading a wrong dose or number aloud is worse than none
+        if not unclear and models["describer"].mentions_text(description):
             t = time.time()
             text_lines = models["describer"].read_text(img)
             timings["text"] = time.time() - t

@@ -18,7 +18,7 @@ class Config:
 
     # Flag a photo as too blurry/dark when the fine-tuned model is at least this sure (0-1).
     # Chosen on held-out VizWiz photos by training/evaluate.py (see eval/results.json "calibration")
-    UNREADABLE_THRESHOLD = 0.5
+    UNREADABLE_THRESHOLD = 0.4
 
     MAX_FILE_SIZE_MB = 10
     HOST = "127.0.0.1"
