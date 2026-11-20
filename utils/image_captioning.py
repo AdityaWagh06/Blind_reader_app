@@ -32,6 +32,19 @@ class ImageCaptioner:
             logger.error(f"Error loading BLIP model: {str(e)}")
             raise RuntimeError(f"Failed to load BLIP model: {str(e)}")
     
+    @torch.no_grad()
+    def unreadable_probability(self, image):
+        """
+        Probability (0-1) that the caption starts with "quality" - how sure the VizWiz-tuned model is
+        that the photo is too blurry/dark to describe ("quality issues are too severe ...").
+        Thresholding this is more reliable than trusting the single best caption.
+        """
+        inputs = self.processor(images=self.preprocess_image(image), text="quality", return_tensors="pt").to(self.device)
+        # BLIP replaces the first token with its decoder start token; logits[0, 0] predicts the first caption word
+        logits = self.model(**inputs).logits[0, 0]
+        quality_id = inputs["input_ids"][0, 1]
+        return torch.softmax(logits.float(), dim=-1)[quality_id].item()
+
     def preprocess_image(self, image):
         """Preprocess the image for BLIP model"""
         try:
@@ -52,13 +65,14 @@ class ImageCaptioner:
             logger.error(f"Error preprocessing image: {str(e)}")
             raise RuntimeError(f"Failed to preprocess image: {str(e)}")
     
-    def generate_caption(self, image):
+    def generate_caption(self, image, avoid_unreadable=False):
         """
         Generate a caption for the given image
-        
+
         Args:
             image: PIL Image object
-            
+            avoid_unreadable: never start with "quality ..." (use when the photo was judged readable)
+
         Returns:
             str: Generated caption
         """
@@ -77,17 +91,18 @@ class ImageCaptioner:
                     max_length=50,
                     num_beams=5,
                     early_stopping=True,
-                    do_sample=False
+                    do_sample=False,
+                    bad_words_ids=[[self.processor.tokenizer.convert_tokens_to_ids("quality")]] if avoid_unreadable else None,
                 )
-            
+
             # Decode the generated caption
             caption = self.processor.decode(outputs[0], skip_special_tokens=True)
-            
+
             # Clean up the caption
             caption = caption.strip()
             if not caption.endswith('.'):
                 caption += '.'
-            
+
             logger.info(f"Generated caption: {caption}")
             return caption
             
