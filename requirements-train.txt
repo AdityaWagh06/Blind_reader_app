@@ -1,0 +1,6 @@
+# Fine-tuning (training/finetune_blip.py) and evaluation (training/evaluate.py)
+-r requirements.txt
+datasets>=2.19
+accelerate>=0.30
+tensorboard>=2.16
+pycocoevalcap>=1.2
