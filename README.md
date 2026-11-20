@@ -34,6 +34,13 @@ The first start downloads the two models (about 1.4 GB) from Hugging Face. After
 
 Requirements: Python 3.9+, about 4 GB of free RAM. A GPU is optional (CPU: 10–25 s per photo).
 
+**Docker:**
+
+```bash
+docker build -t blind-reader .
+docker run -p 8000:8000 -v blind-reader-models:/models blind-reader
+```
+
 ## How it works
 
 ```
@@ -93,7 +100,7 @@ Reproduce: run the last cell of [`training/finetune_blip_colab.ipynb`](training/
 - **Held-out loss / perplexity**: how surprised the model is by the human's real caption on photos it never trained on (lower is better)
 - **Precision / recall / F1**: for the yes/no "too blurry?" decision, how often an alarm is right / how many blurry photos are caught / the balance of both
 
-Full explanations with formulas and worked examples are on the website's Evaluation page.
+Full explanations with formulas and worked examples are on the website's Evaluation page and in [docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md).
 
 ## Train your own
 
@@ -103,6 +110,15 @@ Full explanations with formulas and worked examples are on the website's Evaluat
 4. Put that name in `config.py` (`BLIP_MODEL`) or set `$env:BLIND_READER_BLIP_MODEL`.
 
 Quick local check of the training code (16 photos, 2 steps): `python training/finetune_blip.py --limit 16 --max_steps 2 --batch_size 2`
+
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest tests
+```
+
+The tests use stand-in models, so they run in seconds and download nothing. GitHub Actions runs them on every push. `python test_installation.py` is the slower end-to-end check with the real models.
 
 ## Configuration
 
@@ -137,6 +153,8 @@ utils/scene_describer.py   Florence-2: detailed description + OCR
 training/finetune_blip.py  fine-tuning script
 training/finetune_blip_colab.ipynb  Colab notebook: train, publish, evaluate
 training/evaluate.py       held-out evaluation and threshold calibration
+tests/                     fast API and text-reading tests (pytest)
+docs/PROJECT_GUIDE.md      the whole project explained, with every metric and common questions
 eval/                      evaluation results and every prediction
 test_installation.py       end-to-end installation check
 run.bat / run.sh / run.py  launchers
@@ -149,6 +167,10 @@ run.bat / run.sh / run.py  launchers
 - The blurry-photo check still misses about half of the truly unreadable photos at the chosen threshold, a deliberate trade-off for far fewer false alarms.
 - Captions are scored against one human caption per photo, so absolute BLEU and CIDEr values are lower than published benchmarks that use five.
 - On a CPU a photo takes 10–25 seconds; a GPU brings this to a few seconds.
+
+## License
+
+The code is MIT licensed (see [LICENSE](LICENSE)). The models and data keep their own licences: BLIP (BSD-3-Clause), Florence-2 (MIT) and VizWiz-Captions (CC BY 4.0).
 
 ## Acknowledgments
 
