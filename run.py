@@ -10,7 +10,7 @@ REQUIRED = {"torch": "torch", "transformers": "transformers", "PIL": "pillow",
 
 
 def main():
-    if sys.version_info < (3, 9):
+    if sys.version_info < (3, 9):  # noqa: UP036 - friendly message instead of a syntax error
         print(f"Python 3.9 or higher is required (you have {sys.version.split()[0]}).")
         return 1
     missing = [pkg for module, pkg in REQUIRED.items() if importlib.util.find_spec(module) is None]

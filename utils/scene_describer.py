@@ -7,7 +7,9 @@ from transformers import AutoProcessor, Florence2ForConditionalGeneration
 logger = logging.getLogger(__name__)
 
 # Words in a description that suggest the photo contains readable text worth a dedicated OCR pass
-TEXT_HINTS = re.compile(r"\b(text|reads?|written|words?|label|sign|title|letters?|numbers?|screen|page|document)\b", re.I)
+TEXT_HINTS = re.compile(
+    r"\b(text|reads?|written|words?|label|sign|title|letters?|numbers?|screen|page|document)\b", re.IGNORECASE
+)
 
 
 class SceneDescriber:

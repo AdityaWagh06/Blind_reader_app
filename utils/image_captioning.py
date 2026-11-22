@@ -34,7 +34,8 @@ class ImageCaptioner:
         that the photo is too blurry/dark to describe ("quality issues are too severe ...").
         Thresholding this is more reliable than trusting the single best caption.
         """
-        inputs = self.processor(images=self.preprocess_image(image), text="quality", return_tensors="pt").to(self.device)
+        image = self.preprocess_image(image)
+        inputs = self.processor(images=image, text="quality", return_tensors="pt").to(self.device)
         # BLIP replaces the first token with its decoder start token; logits[0, 0] predicts the first caption word
         logits = self.model(**inputs).logits[0, 0]
         quality_id = inputs["input_ids"][0, 1]

@@ -103,9 +103,10 @@ def describe(image: UploadFile = File(...)):
         img = ImageOps.exif_transpose(img).convert("RGB")
     except Image.DecompressionBombError:
         # a small file can still decode to billions of pixels and exhaust memory
-        raise HTTPException(413, "This image has too many pixels. Please use a normal photo.")
+        raise HTTPException(413, "This image has too many pixels. Please use a normal photo.") from None
     except (UnidentifiedImageError, OSError):
-        raise HTTPException(415, "That file is not an image we can read. Please use a JPG, PNG or WebP photo.")
+        raise HTTPException(415, "That file is not an image we can read. "
+                                 "Please use a JPG, PNG or WebP photo.") from None
     if model_error:
         raise HTTPException(500, f"The AI models failed to load: {model_error}")
     if len(models) < 2:
@@ -118,7 +119,7 @@ def describe(image: UploadFile = File(...)):
         result = analyse(img)
     except Exception:
         logger.exception("Describing a photo failed")
-        raise HTTPException(500, "Something went wrong while describing this photo. Please try another one.")
+        raise HTTPException(500, "Something went wrong while describing this photo. Please try another one.") from None
     finally:
         model_lock.release()
     logger.info("described %dx%d photo in %s, unclear=%s, %d text lines", *img.size,
@@ -166,7 +167,7 @@ def eval_results():
             from huggingface_hub import hf_hub_download
             path = Path(hf_hub_download(Config.BLIP_MODEL, "eval/results.json"))
         except Exception:
-            raise HTTPException(404, "No evaluation yet. Run: python training/evaluate.py")
+            raise HTTPException(404, "No evaluation yet. Run: python training/evaluate.py") from None
     return json.loads(path.read_text(encoding="utf-8"))
 
 

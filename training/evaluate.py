@@ -161,7 +161,8 @@ def main():
     ours = "Fine-tuned BLIP (ours)"
     cal, test_idx = calibrate(truth, [r[f"{ours} | p_unreadable"] for r in rows])
     # The old rule (trust the caption's first words) on the same half, for a fair before/after
-    cal["test_half_caption_rule"] = classify([truth[i] for i in test_idx], [is_unreadable(rows[i][ours]) for i in test_idx])
+    cal["test_half_caption_rule"] = classify([truth[i] for i in test_idx],
+                                             [is_unreadable(rows[i][ours]) for i in test_idx])
     results["calibration"] = cal
     results["examples"] = [{k: v for k, v in r.items() if " | " not in k} for r in rows[:12]]
 

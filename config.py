@@ -27,7 +27,8 @@ class Config:
     PORT = 8000
 
 
-for _key in ("BLIP_MODEL", "FLORENCE_MODEL", "UNREADABLE_THRESHOLD", "MAX_FILE_SIZE_MB", "QUEUE_TIMEOUT_S", "HOST", "PORT"):
+for _key in ("BLIP_MODEL", "FLORENCE_MODEL", "UNREADABLE_THRESHOLD", "MAX_FILE_SIZE_MB", "QUEUE_TIMEOUT_S",
+             "HOST", "PORT"):
     _value = os.getenv(f"BLIND_READER_{_key}")
     if _value:
         setattr(Config, _key, type(getattr(Config, _key))(_value))

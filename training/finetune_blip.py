@@ -28,7 +28,8 @@ def parse_args():
     p.add_argument("--limit", type=int, default=None, help="use only the first N examples (smoke test)")
     p.add_argument("--max_steps", type=int, default=-1)
     p.add_argument("--logging_steps", type=int, default=25)
-    p.add_argument("--report_to", default="tensorboard", help='live charts: "tensorboard --logdir <output_dir>/logs"; "none" to disable')
+    p.add_argument("--report_to", default="tensorboard",
+                   help='live charts: "tensorboard --logdir <output_dir>/logs"; "none" to disable')
     return p.parse_args()
 
 
