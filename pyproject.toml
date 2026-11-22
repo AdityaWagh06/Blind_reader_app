@@ -1,6 +1,6 @@
 [project]
 name = "blind-reader-assistant"
-version = "2.1.0"
+version = "2.2.0"
 description = "Offline photo describer for blind and visually impaired people, with a BLIP model fine-tuned on VizWiz"
 readme = "README.md"
 license = "MIT"

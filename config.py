@@ -9,7 +9,7 @@ import os
 
 class Config:
     APP_NAME = "Blind Reader Assistant"
-    APP_VERSION = "2.1.0"
+    APP_VERSION = "2.2.0"
 
     # Short summary + "is the photo readable?" check: BLIP fine-tuned on VizWiz (photos taken by blind people)
     BLIP_MODEL = "adityawagh07/blip-vizwiz"
