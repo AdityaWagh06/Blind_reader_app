@@ -144,3 +144,10 @@ def test_model_crash_answers_500_and_frees_lock(client):
     assert res.status_code == 500 and "out of memory" not in res.text  # no internals leaked
     assert server.model_lock.acquire(blocking=False)
     server.model_lock.release()
+
+
+def test_security_headers(client):
+    headers = client.get("/").headers
+    assert "default-src 'self'" in headers["content-security-policy"]
+    assert headers["x-content-type-options"] == "nosniff"
+    assert "content-security-policy" not in client.get("/docs").headers

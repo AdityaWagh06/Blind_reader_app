@@ -36,6 +36,26 @@ async def lifespan(_app):
 
 
 app = FastAPI(title=Config.APP_NAME, version=Config.APP_VERSION, lifespan=lifespan)
+
+# The site loads nothing from other origins; inline style attributes are used by the result charts.
+# /docs is excluded because FastAPI's Swagger page loads its scripts from a CDN.
+SECURITY_HEADERS = {
+    "Content-Security-Policy": "default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; "
+                               "frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "camera=(self), microphone=(), geolocation=()",
+}
+
+
+@app.middleware("http")
+async def security_headers(request, call_next):
+    response = await call_next(request)
+    if not request.url.path.startswith(("/docs", "/redoc")):
+        response.headers.update(SECURITY_HEADERS)
+    return response
+
+
 models = {}
 model_error = None
 model_lock = threading.Lock()  # one image at a time: the models are large and share the CPU/GPU
