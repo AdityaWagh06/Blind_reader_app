@@ -6,7 +6,7 @@
 - A model failure returns a clean 500 and is logged with its traceback. Each photo is logged with size, timings and outcome only.
 - Security headers on every page: a strict Content-Security-Policy, nosniff, no-referrer and a camera-only Permissions-Policy.
 - The Docker image runs as a non-root user and has a health check.
-- Ruff linting, a `pyproject.toml`, and CI on Python 3.9 and 3.12 with a Docker build check.
+- Ruff linting, a `pyproject.toml`, and CI on Python 3.10 and 3.13 with a Docker build check.
 - Simplified the BLIP wrapper.
 - Rewrote the README.
 

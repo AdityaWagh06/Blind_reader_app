@@ -4,7 +4,7 @@
 
 [![tests](https://github.com/AdityaWagh06/Blind_reader_app/actions/workflows/tests.yml/badge.svg)](https://github.com/AdityaWagh06/Blind_reader_app/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
 [![Model on Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20model-blip--vizwiz-yellow)](https://huggingface.co/adityawagh07/blip-vizwiz)
 
 ![Blind Reader Assistant screenshot](assets/screenshot.png)
@@ -55,7 +55,7 @@ docker build -t blind-reader .
 docker run -p 8000:8000 -v blind-reader-models:/models blind-reader
 ```
 
-The first start downloads the two models (about 1.4 GB) from Hugging Face. After that, the app works offline. You need Python 3.9+ and about 4 GB of free RAM. A GPU is optional: on a CPU, each photo takes 10–25 seconds.
+The first start downloads the two models (about 1.4 GB) from Hugging Face. After that, the app works offline. You need Python 3.10+ (3.9 still runs but is end-of-life) and about 4 GB of free RAM. A GPU is optional: on a CPU, each photo takes 10–25 seconds.
 
 ## How it works
 
@@ -131,7 +131,7 @@ The [project guide](docs/PROJECT_GUIDE.md) and the website's Evaluation page exp
 | Area | What is in place |
 |---|---|
 | Testing | 15 fast pytest tests with stand-in models: upload validation, the clear and blurry paths, OCR gating, EXIF rotation, busy and crash handling, security headers. Plus `test_installation.py` for an end-to-end check with the real models |
-| CI | GitHub Actions on every push: ruff lint, tests on Python 3.9 and 3.12, and a Docker build-and-start check |
+| CI | GitHub Actions on every push: ruff lint, tests on Python 3.10 and 3.13, and a Docker build-and-start check |
 | Input safety | 10 MB upload limit, real image decoding (not trusting the file extension), decompression-bomb protection, EXIF orientation |
 | Reliability | Models load in the background so the site is up instantly. Requests are queued with a timeout (503 when busy). Model failures return a clean 500 without internals, and are logged with a traceback |
 | Security | Strict Content-Security-Policy (no third-party scripts), nosniff, no-referrer, camera-only Permissions-Policy. Binds to 127.0.0.1 by default. The Docker image runs as a non-root user and has a health check |
