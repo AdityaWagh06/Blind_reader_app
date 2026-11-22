@@ -29,6 +29,7 @@ Why two models? BLIP is small and easy to fine-tune, so we specialised it on bli
 | 6 | Evaluated all models on 388 held-out photos | To prove the fine-tuning helped, with numbers |
 | 7 | Calibrated the blurry check | The raw model raised far too many false alarms |
 | 8 | Tests, CI, Docker, licence | So the project is maintainable and easy to run anywhere |
+| 9 | Production hardening: request queue limit, clean error handling, security headers, non-root Docker, linting | So it behaves safely under load, bad input and failures |
 
 ## 4. The data
 
@@ -118,7 +119,7 @@ Accuracy rose from 63.9% to 88.7%. The trade-off: it now misses about half of th
 | Evaluation | pycocoevalcap (BLEU, ROUGE-L, CIDEr), our own precision/recall/calibration code |
 | Server | FastAPI, Uvicorn, Pillow |
 | Website | Plain HTML, CSS and JavaScript (no framework), Web Speech API |
-| Quality | pytest, GitHub Actions, Docker |
+| Quality | pytest, ruff, GitHub Actions, Docker |
 
 ## 10. Questions people ask
 
@@ -138,6 +139,8 @@ Accuracy rose from 63.9% to 88.7%. The trade-off: it now misses about half of th
 - Run on a GPU or quantise the models for speed.
 - Use more human captions per photo for evaluation.
 - Ask blind users to test the app.
+
+**Is it production ready?** For a single user or a small group on one machine, yes. It validates every upload, never stores photos, limits how long requests wait, fails cleanly, sends strict security headers, and is tested in CI, including the Docker build. Serving many users at once would need a GPU and a job queue, because it describes one photo at a time.
 
 **What are the limitations?**
 - Descriptions can contain small mistakes, such as a wrong colour or count.
