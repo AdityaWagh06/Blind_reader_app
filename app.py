@@ -91,24 +91,39 @@ def describe(image: UploadFile = File(...)):
     if len(models) < 2:
         raise HTTPException(503, "The AI models are still loading. Please try again in a moment.")
 
+    # Requests queue for one photo at a time; give up rather than pile up threads behind a slow CPU
+    if not model_lock.acquire(timeout=Config.QUEUE_TIMEOUT_S):
+        raise HTTPException(503, "The app is busy with other photos. Please try again in a minute.")
+    try:
+        result = analyse(img)
+    except Exception:
+        logger.exception("Describing a photo failed")
+        raise HTTPException(500, "Something went wrong while describing this photo. Please try another one.")
+    finally:
+        model_lock.release()
+    logger.info("described %dx%d photo in %s, unclear=%s, %d text lines", *img.size,
+                result["seconds"], result["unclear"], len(result["text_lines"]))
+    return result
+
+
+def analyse(img):
     timings = {}
-    with model_lock:
-        t = time.time()
-        p_unreadable = models["captioner"].unreadable_probability(img)
-        unclear = p_unreadable >= Config.UNREADABLE_THRESHOLD
-        summary = models["captioner"].generate_caption(img, avoid_unreadable=not unclear)
-        timings["summary"] = time.time() - t
+    t = time.time()
+    p_unreadable = models["captioner"].unreadable_probability(img)
+    unclear = p_unreadable >= Config.UNREADABLE_THRESHOLD
+    summary = models["captioner"].generate_caption(img, avoid_unreadable=not unclear)
+    timings["summary"] = time.time() - t
 
-        t = time.time()
-        description = models["describer"].describe(img)
-        timings["description"] = time.time() - t
+    t = time.time()
+    description = models["describer"].describe(img)
+    timings["description"] = time.time() - t
 
-        text_lines = []
-        # OCR invents characters on blurry photos; reading a wrong dose or number aloud is worse than none
-        if not unclear and models["describer"].mentions_text(description):
-            t = time.time()
-            text_lines = models["describer"].read_text(img)
-            timings["text"] = time.time() - t
+    text_lines = []
+    # OCR invents characters on blurry photos; reading a wrong dose or number aloud is worse than none
+    if not unclear and models["describer"].mentions_text(description):
+        t = time.time()
+        text_lines = models["describer"].read_text(img)
+        timings["text"] = time.time() - t
 
     return {
         "summary": "This photo looks blurry or unclear." if unclear else summary[0].upper() + summary[1:],

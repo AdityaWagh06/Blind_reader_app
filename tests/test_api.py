@@ -121,3 +121,26 @@ def test_exif_rotation_applied(client):
 def test_eval_results_served(client):
     body = client.get("/api/eval").json()
     assert "calibration" in body
+
+
+def test_busy_server_answers_503(client, monkeypatch):
+    use_models()
+    monkeypatch.setattr(server.Config, "QUEUE_TIMEOUT_S", 0.01)
+    server.model_lock.acquire()
+    try:
+        assert post(client, png()).status_code == 503
+    finally:
+        server.model_lock.release()
+
+
+def test_model_crash_answers_500_and_frees_lock(client):
+    use_models()
+
+    def boom(image):
+        raise RuntimeError("out of memory")
+
+    server.models["describer"].describe = boom
+    res = post(client, png())
+    assert res.status_code == 500 and "out of memory" not in res.text  # no internals leaked
+    assert server.model_lock.acquire(blocking=False)
+    server.model_lock.release()

@@ -21,11 +21,13 @@ class Config:
     UNREADABLE_THRESHOLD = 0.4
 
     MAX_FILE_SIZE_MB = 10
+    # How long a request waits for the models while another photo is being described
+    QUEUE_TIMEOUT_S = 120
     HOST = "127.0.0.1"
     PORT = 8000
 
 
-for _key in ("BLIP_MODEL", "FLORENCE_MODEL", "UNREADABLE_THRESHOLD", "MAX_FILE_SIZE_MB", "HOST", "PORT"):
+for _key in ("BLIP_MODEL", "FLORENCE_MODEL", "UNREADABLE_THRESHOLD", "MAX_FILE_SIZE_MB", "QUEUE_TIMEOUT_S", "HOST", "PORT"):
     _value = os.getenv(f"BLIND_READER_{_key}")
     if _value:
         setattr(Config, _key, type(getattr(Config, _key))(_value))
