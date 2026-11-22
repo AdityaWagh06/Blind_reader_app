@@ -27,3 +27,14 @@ jobs:
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
       - run: pip install -r requirements-dev.txt
       - run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t blind-reader .
+      # the server must start and answer even before the models finish downloading
+      - run: |
+          docker run -d --name app -p 8000:8000 blind-reader
+          for i in $(seq 30); do curl -sf http://127.0.0.1:8000/api/status && exit 0; sleep 2; done
+          docker logs app; exit 1
