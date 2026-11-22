@@ -1,0 +1,20 @@
+[project]
+name = "blind-reader-assistant"
+version = "2.1.0"
+description = "Offline photo describer for blind and visually impaired people, with a BLIP model fine-tuned on VizWiz"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+extend-exclude = ["venv", "*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+# File(...) in a parameter default is FastAPI's documented pattern
+ignore = ["B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
