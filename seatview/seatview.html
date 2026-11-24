@@ -54,6 +54,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 
 /* pickers */
 .pick{padding-block:18px 6px;display:grid;gap:14px}
+.pick > div{min-width:0}
 .label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .row-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
 .date,.show{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 12px;text-align:center;min-width:64px}
@@ -144,7 +145,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 .pbtn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
 .pv-title{flex:1;min-width:0;text-align:center}
 .pv-title strong{font-family:var(--f-display);font-size:24px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;display:block;line-height:1}
-.pv-title span{font-size:12px;color:var(--muted)}
+.pv-title span{font-size:12px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pv-acts{display:flex;gap:6px}
 .card{position:absolute;left:max(14px,env(safe-area-inset-left,0px));top:calc(78px + env(safe-area-inset-top,0px));width:250px;background:rgba(12,14,24,.78);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;backdrop-filter:blur(8px)}
 .score{display:flex;align-items:center;gap:12px;margin-bottom:10px}
@@ -178,7 +179,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 @media (max-width:700px){
   .film{grid-template-columns:92px 1fr;gap:14px}
   .callout{display:none}
-  .card{width:auto;right:max(14px,env(safe-area-inset-right,0px));top:auto;bottom:calc(150px + env(safe-area-inset-bottom,0px));padding:10px 12px;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+  .card{width:auto;right:max(14px,env(safe-area-inset-right,0px));top:calc(64px + env(safe-area-inset-top,0px));padding:10px 12px;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
   .card .score{margin:0}
   .card .stats{grid-template-columns:1fr 1fr;gap:4px 10px;font-size:11px}
   .card .stats div{padding-top:3px}
@@ -252,6 +253,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
     <div class="pv-acts">
       <button class="pbtn" id="pvLights" aria-pressed="true" title="House lights (L)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg><span class="t">Lights</span></button>
       <button class="pbtn" id="pvSound" aria-pressed="false" title="Sound"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg><span class="t">Sound</span></button>
+      <button class="pbtn" id="pvImg" title="Put your own image on the screen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="t">Screen image</span></button><input type="file" id="pvFile" accept="image/*" hidden>
       <button class="pbtn" id="pvCenter" title="Look at screen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg><span class="t">Recenter</span></button>
     </div>
   </div>
@@ -296,11 +298,11 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* ---------------- auditorium geometry (metres) ---------------- */
 const SEAT_W = 0.62, AISLE = 1.3, HALF_SPAN = (15 * SEAT_W + 2 * AISLE) / 2;
 const HALF_W = 9, RD = 21.4, RH = 11;
-const SCR = { w: 13.2, h: 5.52, bottom: 1.6, z: 0.42 }; SCR.cy = SCR.bottom + SCR.h / 2;
+const SCR = { w: 13.2, h: 5.52, bottom: 1.9, z: 0.42 }; SCR.cy = SCR.bottom + SCR.h / 2;
 const seatX = n => (n - 1) * SEAT_W + blockOf(n) * AISLE - HALF_SPAN;
 const rowZ = ri => 6 + ri * 1.25;
-const rowFloor = ri => ri < 2 ? ri * 0.12 : 0.24 + (ri - 2) * 0.44;
-const eyeOf = (ri, n) => ({ x: seatX(n), y: rowFloor(ri) + (ri >= 10 ? 1.06 : 1.12), z: rowZ(ri) + 0.14 });
+const rowFloor = ri => ri < 2 ? ri * 0.15 : 0.3 + (ri - 2) * 0.52;
+const eyeOf = (ri, n) => ({ x: seatX(n), y: rowFloor(ri) + 1.15, z: rowZ(ri) + 0.16 });
 const deg = r => r * 180 / Math.PI;
 
 function metrics(ri, n) {
@@ -598,7 +600,7 @@ function build3D() {
   add(new THREE.BoxGeometry(15, 0.04, 0.04), new THREE.MeshBasicMaterial({ color: 0x6a4a22 }), 0, 0.68, 2.61);
 
   /* screen (slightly curved) */
-  const SC = document.createElement('canvas'); SC.width = 1024; SC.height = 428; const sg = SC.getContext('2d');
+  const SC = document.createElement('canvas'); SC.width = 2048; SC.height = 856; const sg = SC.getContext('2d');
   const screenTex = new THREE.CanvasTexture(SC); screenTex.encoding = THREE.sRGBEncoding; screenTex.anisotropy = 8;
   const sgeo = new THREE.PlaneGeometry(SCR.w, SCR.h, 48, 1);
   const sp = sgeo.attributes.position; for (let i = 0; i < sp.count; i++) { const x = sp.getX(i); sp.setZ(i, (x / (SCR.w / 2)) ** 2 * 0.45); }
@@ -673,18 +675,25 @@ function build3D() {
 
   /* seats (instanced) */
   const N = 12 * PER_ROW;
+  function rbox(w, h, d, r) {
+    const bs = r * 0.9, x = w / 2 - bs, y = h / 2 - bs, cr = Math.min(r * 0.6, x, y), sh = new THREE.Shape();
+    sh.moveTo(-x + cr, -y); sh.lineTo(x - cr, -y); sh.quadraticCurveTo(x, -y, x, -y + cr); sh.lineTo(x, y - cr); sh.quadraticCurveTo(x, y, x - cr, y);
+    sh.lineTo(-x + cr, y); sh.quadraticCurveTo(-x, y, -x, y - cr); sh.lineTo(-x, -y + cr); sh.quadraticCurveTo(-x, -y, -x + cr, -y);
+    const g = new THREE.ExtrudeGeometry(sh, { depth: Math.max(0.001, d - 2 * bs), bevelEnabled: true, bevelThickness: bs, bevelSize: bs, bevelSegments: 3, curveSegments: 4 });
+    g.center(); g.computeVertexNormals(); return g;
+  }
   const velvetSeat = std(0xffffff, 0.92);
-  const cushion = new THREE.InstancedMesh(new THREE.BoxGeometry(0.5, 0.13, 0.5), velvetSeat, N);
-  const backrest = new THREE.InstancedMesh(new THREE.BoxGeometry(0.52, 0.72, 0.11), velvetSeat, N);
+  const cushion = new THREE.InstancedMesh(rbox(0.5, 0.13, 0.5, 0.05), velvetSeat, N);
+  const backrest = new THREE.InstancedMesh(rbox(0.52, 0.6, 0.11, 0.045), velvetSeat, N);
   const baseM = new THREE.InstancedMesh(new THREE.BoxGeometry(0.42, 0.4, 0.34), std(0x0d0e13, 0.7), N);
-  const arms = new THREE.InstancedMesh(new THREE.BoxGeometry(0.07, 0.09, 0.58), std(0x17181f, 0.5, 0.2), N + 36);
+  const arms = new THREE.InstancedMesh(rbox(0.08, 0.09, 0.58, 0.035), std(0x17181f, 0.5, 0.2), N + 36);
   let ai = 0;
   const seatIndex = (ri, n) => ri * PER_ROW + n - 1;
   for (let ri = 0; ri < 12; ri++) for (let n = 1; n <= PER_ROW; n++) {
     const x = seatX(n), y = rowFloor(ri), z = rowZ(ri), rec = ri >= 10, i = seatIndex(ri, n);
     dmy.rotation.set(0, 0, 0);
     dmy.position.set(x, y + 0.45, z - 0.02); dmy.scale.set(rec ? 1.08 : 1, rec ? 1.5 : 1, rec ? 1.2 : 1); dmy.updateMatrix(); cushion.setMatrixAt(i, dmy.matrix);
-    dmy.position.set(x, y + (rec ? 0.92 : 0.84), z + (rec ? 0.33 : 0.27)); dmy.rotation.set(rec ? 0.26 : 0.15, 0, 0); dmy.scale.set(rec ? 1.08 : 1, rec ? 1.3 : 1, rec ? 1.8 : 1); dmy.updateMatrix(); backrest.setMatrixAt(i, dmy.matrix);
+    dmy.position.set(x, y + (rec ? 0.78 : 0.75), z + (rec ? 0.33 : 0.27)); dmy.rotation.set(rec ? 0.24 : 0.15, 0, 0); dmy.scale.set(rec ? 1.08 : 1, rec ? 1.1 : 1, rec ? 1.6 : 1); dmy.updateMatrix(); backrest.setMatrixAt(i, dmy.matrix);
     dmy.rotation.set(0, 0, 0); dmy.scale.set(1, 1, 1);
     dmy.position.set(x, y + 0.2, z); dmy.updateMatrix(); baseM.setMatrixAt(i, dmy.matrix);
     dmy.position.set(x - 0.31, y + 0.66, z + 0.02); dmy.updateMatrix(); arms.setMatrixAt(ai++, dmy.matrix);
@@ -726,7 +735,7 @@ function build3D() {
   const DUST = 700, dpos = new Float32Array(DUST * 3), dseed = [];
   for (let i = 0; i < DUST; i++) dseed.push([Math.random() * 2 - 1, Math.random() * 2 - 1, 0.05 + Math.random() * 0.9, Math.random() * 6.28, 0.2 + Math.random()]);
   const dgeo = new THREE.BufferGeometry(); dgeo.setAttribute('position', new THREE.BufferAttribute(dpos, 3));
-  const dustMat = new THREE.PointsMaterial({ size: 0.03, color: 0xfff3dc, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const dustMat = new THREE.PointsMaterial({ size: 0.014, color: 0xfff3dc, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
   scene.add(new THREE.Points(dgeo, dustMat));
 
   /* lights */
@@ -741,102 +750,54 @@ function build3D() {
   const screenFill = new THREE.PointLight(0xffffff, 0, 16, 1.6); screenFill.position.set(0, SCR.cy, 3); scene.add(screenFill);
 
   /* ---------- on-screen "film" ---------- */
-  const stars = Array.from({ length: 420 }, () => ({ x: Math.random() * 2 - 1, y: Math.random() * 2 - 1, z: Math.random() }));
+  /* ---------- one still image on the screen (your image, or built-in art) ---------- */
   const DISP = '"Big Shoulders Display", Impact, "Arial Narrow", sans-serif';
-  const W = 1024, H = 428, TL = 27, TL2 = 34;
-  let lastPhase = -1;
-  const spaced = (txt, x, y, sp) => { if ('letterSpacing' in sg) { sg.letterSpacing = sp + 'px'; sg.fillText(txt, x + sp / 2, y); sg.letterSpacing = '0px'; } else sg.fillText(txt, x, y); };
-  function drawPre(t) {
-    const gr = sg.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#16132c'); gr.addColorStop(1, '#05050c');
-    sg.fillStyle = gr; sg.fillRect(0, 0, W, H);
-    sg.save(); sg.translate(W / 2, H * 0.44);
-    for (let i = 0; i < 3; i++) { sg.beginPath(); sg.arc(0, 0, 150 + i * 16 + Math.sin(t * 0.8 + i) * 3, 0, 6.283); sg.strokeStyle = `rgba(94,255,184,${0.12 - i * 0.03})`; sg.lineWidth = 10; sg.stroke(); }
-    sg.restore();
-    sg.textAlign = 'center'; sg.textBaseline = 'alphabetic';
-    sg.fillStyle = '#d7dbe6'; sg.font = `900 104px ${DISP}`; spaced('AVENGERS', W / 2, H * 0.47, 16);
-    sg.fillStyle = '#5effb8'; sg.font = `800 50px ${DISP}`; spaced('DOOMSDAY', W / 2, H * 0.47 + 58, 22);
-    sg.fillStyle = 'rgba(236,234,228,.75)'; sg.font = '500 21px "Instrument Sans", Arial, sans-serif';
-    sg.fillText('The feature presentation will begin shortly', W / 2, H * 0.84);
-    sg.fillStyle = 'rgba(236,234,228,.45)'; sg.font = '16px "Instrument Sans", Arial, sans-serif';
-    sg.fillText('Please switch your phone to silent  ·  Orbit Cinemas, Screen 3', W / 2, H * 0.91);
-    return [0.36, 0.38, 0.55, 0.42];
+  const W = SC.width = 2048, H = SC.height = 856;
+  const art = document.createElement('canvas'); art.width = W; art.height = H;
+  function makeArt() {
+    const g = art.getContext('2d');
+    drawCity(g, W, H, 4);
+    g.fillStyle = 'rgba(3,16,10,.45)'; g.fillRect(0, 0, W, H);
+    const v = g.createLinearGradient(0, 0, W * 0.6, 0); v.addColorStop(0, 'rgba(0,0,0,.75)'); v.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = v; g.fillRect(0, 0, W, H);
+    drawFigure(g, W * 0.7, H * 1.03, H / 400 * 0.98, 0, 1);
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    if ('letterSpacing' in g) g.letterSpacing = '14px';
+    g.fillStyle = '#e8ebf1'; g.font = `900 200px ${DISP}`; g.fillText('AVENGERS', W * 0.06, H * 0.5);
+    g.shadowColor = '#3dff9e'; g.shadowBlur = 30; g.fillStyle = '#7dffc4'; g.font = `800 104px ${DISP}`; g.fillText('DOOMSDAY', W * 0.065, H * 0.5 + 118);
+    g.shadowBlur = 0; g.fillStyle = 'rgba(236,234,228,.75)'; g.font = `700 44px ${DISP}`; g.fillText('18 DECEMBER 2026 · ONLY IN CINEMAS', W * 0.066, H * 0.5 + 196);
+    if ('letterSpacing' in g) g.letterSpacing = '0px';
   }
-  function drawShow(time, dt) {
-    const rt = time % TL2;
-    const phase = rt < 5 ? 0 : rt < 11 ? 5 : rt < 18 ? 6 : rt < 23 ? 1 : rt < 24.2 ? 2 : rt < 30 ? 3 : 4;
-    const t = phase === 0 ? rt * 1.4 : phase === 1 ? 7 + (rt - 18) * 1.4 : phase === 2 ? 14 + (rt - 23) : phase === 3 ? 15.2 + (rt - 24.2) * 6.8 / 5.8 : phase === 4 ? 22 + (rt - 30) * 1.25 : rt;
-    if (phase !== lastPhase) { sg.fillStyle = '#000'; sg.fillRect(0, 0, W, H); if (phase === 2) Snd.boom(1); if (phase === 3 || phase === 6) Snd.boom(0.6); lastPhase = phase; }
-    sg.textAlign = 'center'; sg.textBaseline = 'alphabetic';
-    const caption = (txt, a) => { sg.globalAlpha = a; sg.fillStyle = '#ece6dc'; sg.font = `700 34px ${DISP}`; spaced(txt, W / 2, H * 0.18, 10); sg.globalAlpha = 1; };
-    if (phase === 5) {
-      const p = (rt - 5) / 6; drawCity(sg, W, H, time);
-      caption('EVERY WORLD WILL BURN', Math.min(1, p * 3) * Math.min(1, (1 - p) * 4));
-      return [0.85, 0.38, 0.14, 0.28 + 0.05 * Math.sin(time * 3)];
-    }
-    if (phase === 6) {
-      const p = (rt - 11) / 7; drawFigureScene(sg, W, H, time, p);
-      sg.textAlign = 'left'; sg.globalAlpha = Math.min(1, p * 2) * Math.min(1, (1 - p) * 4); sg.fillStyle = '#bfe9d2'; sg.font = `700 30px ${DISP}`; spaced('ONE MASK.', W * 0.06, H * 0.42, 8); spaced('ONE DOOMSDAY.', W * 0.06, H * 0.42 + 38, 8); sg.globalAlpha = 1; sg.textAlign = 'center';
-      return [0.15, 0.45, 0.28, 0.14 + 0.06 * Math.sin(time * 2.2) ** 2];
-    }
-    if (phase === 0) {
-      sg.fillStyle = 'rgba(2,3,10,0.3)'; sg.fillRect(0, 0, W, H);
-      const spd = 0.06 + (t / 7) ** 2 * 1.5;
-      for (const s of stars) {
-        const pz = s.z; s.z -= dt * spd;
-        if (s.z <= 0.03) { s.x = Math.random() * 2 - 1; s.y = Math.random() * 2 - 1; s.z = 1; continue; }
-        const k = 260;
-        const x1 = W / 2 + s.x / pz * k, y1 = H / 2 + s.y / pz * k * 0.6, x2 = W / 2 + s.x / s.z * k, y2 = H / 2 + s.y / s.z * k * 0.6;
-        sg.strokeStyle = `rgba(205,218,255,${Math.min(1, (1 - s.z) * 1.4)})`; sg.lineWidth = 0.8 + (1 - s.z) * 2.2;
-        sg.beginPath(); sg.moveTo(x1, y1); sg.lineTo(x2, y2); sg.stroke();
-      }
-      const f = t / 7; return [0.16, 0.18, 0.32, 0.12 + f * 0.16];
-    }
-    if (phase === 1) {
-      const p = (t - 7) / 7, R = 40 + p * 175;
-      sg.fillStyle = 'rgba(1,6,4,0.32)'; sg.fillRect(0, 0, W, H);
-      sg.save(); sg.translate(W / 2, H / 2); sg.globalCompositeOperation = 'lighter';
-      const rg = sg.createRadialGradient(0, 0, R * 0.1, 0, 0, R * 1.5); rg.addColorStop(0, `rgba(140,255,200,${0.04 + p * 0.22})`); rg.addColorStop(1, 'rgba(0,0,0,0)'); sg.fillStyle = rg; sg.fillRect(-W / 2, -H / 2, W, H);
-      for (let i = 0; i < 90; i++) {
-        const a = i / 90 * 6.283 + t * (0.5 + (i % 3) * 0.25), rr = R * (0.9 + ((i * 37) % 10) / 55);
-        sg.beginPath(); sg.arc(0, 0, rr, a, a + 0.32); sg.strokeStyle = `hsla(${140 + (i % 5) * 7},100%,${50 + (i % 4) * 8}%,${0.1 + p * 0.22})`; sg.lineWidth = 2 + (i % 4); sg.stroke();
-      }
-      if (Math.random() < 0.2 + p * 0.45) {
-        let a = Math.random() * 6.283, r = R, x = Math.cos(a) * r, y = Math.sin(a) * r;
-        sg.beginPath(); sg.moveTo(x, y);
-        for (let j = 0; j < 7; j++) { r += 18 + Math.random() * 26; a += (Math.random() - 0.5) * 0.35; x = Math.cos(a) * r; y = Math.sin(a) * r; sg.lineTo(x, y); }
-        sg.strokeStyle = 'rgba(200,255,225,.9)'; sg.lineWidth = 2; sg.stroke();
-      }
-      sg.restore(); sg.globalCompositeOperation = 'source-over';
-      return [0.18, 0.55 + p * 0.35, 0.32, 0.22 + p * 0.5];
-    }
-    if (phase === 2) {
-      const p = (t - 14) / 1.2;
-      sg.fillStyle = `rgba(236,255,245,${1 - p * 0.75})`; sg.fillRect(0, 0, W, H);
-      return [1, 1, 1, 1.3 - p * 0.9];
-    }
-    if (phase === 3) {
-      const p = (t - 15.2) / 6.8;
-      const gr = sg.createRadialGradient(W / 2, H * 0.55, 20, W / 2, H * 0.55, W * 0.6); gr.addColorStop(0, '#16201c'); gr.addColorStop(1, '#020303');
-      sg.fillStyle = gr; sg.fillRect(0, 0, W, H);
-      for (let i = 0; i < 5; i++) { const sx = W * (0.15 + i * 0.18) + Math.sin(time * 0.3 + i) * 40; const sm = sg.createRadialGradient(sx, H * 0.7, 0, sx, H * 0.7, 180); sm.addColorStop(0, 'rgba(60,90,80,.12)'); sm.addColorStop(1, 'rgba(0,0,0,0)'); sg.fillStyle = sm; sg.fillRect(0, 0, W, H); }
-      const a = Math.min(1, p * 2.5) * (p > 0.92 ? (1 - p) / 0.08 : 1);
-      sg.globalAlpha = a;
-      const mg = sg.createLinearGradient(0, H * 0.3, 0, H * 0.55); mg.addColorStop(0, '#ffffff'); mg.addColorStop(0.45, '#8e97aa'); mg.addColorStop(0.55, '#e9edf5'); mg.addColorStop(1, '#5b6375');
-      sg.fillStyle = mg; sg.font = `900 132px ${DISP}`; spaced('AVENGERS', W / 2, H * 0.55, 46 - p * 30);
-      sg.shadowColor = '#3dff9e'; sg.shadowBlur = 26; sg.fillStyle = '#7dffc4'; sg.font = `800 56px ${DISP}`; spaced('DOOMSDAY', W / 2, H * 0.55 + 66, 40 - p * 16);
-      sg.shadowBlur = 0; sg.globalAlpha = 1;
-      const fx = -200 + p * 1500;
-      sg.save(); sg.globalCompositeOperation = 'lighter'; sg.translate(fx, H * 0.47); sg.scale(6, 0.18);
-      const fl = sg.createRadialGradient(0, 0, 0, 0, 0, 60); fl.addColorStop(0, 'rgba(200,255,235,.8)'); fl.addColorStop(1, 'rgba(0,0,0,0)'); sg.fillStyle = fl; sg.fillRect(-60, -60, 120, 120);
-      sg.restore();
-      return [0.3, 0.42, 0.38, 0.3 * a + 0.08];
-    }
-    const a = Math.min(1, (t - 22) * 1.5) * Math.max(0, Math.min(1, TL - t));
+  let screenSrc = art, glowBase = [0.3, 0.35, 0.32, 0.3];
+  function paintScreen() {
+    const sw = screenSrc.naturalWidth || screenSrc.width, sh = screenSrc.naturalHeight || screenSrc.height;
+    const k = Math.max(W / sw, H / sh), dw = sw * k, dh = sh * k;
     sg.fillStyle = '#000'; sg.fillRect(0, 0, W, H);
-    sg.globalAlpha = a; sg.fillStyle = '#e4e6ec'; sg.font = `800 54px ${DISP}`; spaced('ONLY IN CINEMAS', W / 2, H * 0.5, 12);
-    sg.fillStyle = '#5effb8'; sg.font = `700 30px ${DISP}`; spaced('18 DECEMBER 2026', W / 2, H * 0.5 + 50, 10); sg.globalAlpha = 1;
-    return [0.1, 0.12, 0.12, 0.08 * a + 0.02];
+    sg.drawImage(screenSrc, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    screenTex.needsUpdate = true;
+    const c = document.createElement('canvas'); c.width = c.height = 1; const cg = c.getContext('2d'); cg.drawImage(SC, 0, 0, 1, 1);
+    try { const d = cg.getImageData(0, 0, 1, 1).data, r = d[0] / 255, gg = d[1] / 255, b = d[2] / 255, m = Math.max(r, gg, b, 0.05); glowBase = [r / m, gg / m, b / m, Math.min(0.8, 0.15 + (0.3 * r + 0.55 * gg + 0.15 * b) * 1.6)]; } catch (e) { /* keep default glow */ }
   }
+  function setScreenImage(img) { screenSrc = img; paintScreen(); }
+  function drawStill(t) { const f = 1 + Math.sin(t * 7.3) * 0.015 + Math.sin(t * 13.1) * 0.01; return [glowBase[0], glowBase[1], glowBase[2], glowBase[3] * f]; }
+  makeArt(); paintScreen();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { makeArt(); if (screenSrc === art) paintScreen(); });
+  function loadUserImage(src, save) {
+    const im = new Image();
+    im.onload = () => {
+      const s = Math.min(1, 2048 / im.naturalWidth), c = document.createElement('canvas');
+      c.width = Math.round(im.naturalWidth * s); c.height = Math.round(im.naturalHeight * s); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      setScreenImage(c);
+      if (save) { try { localStorage.setItem('sv-screen', c.toDataURL('image/jpeg', 0.85)); } catch (e) { /* storage full or blocked: image still shows this visit */ } }
+    };
+    im.src = src;
+  }
+  let saved = null; try { saved = localStorage.getItem('sv-screen'); } catch (e) { saved = null; }
+  if (saved) loadUserImage(saved, false); else loadUserImage('screen.jpg', false);
+  $('pvImg').addEventListener('click', () => $('pvFile').click());
+  $('pvFile').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    const rd = new FileReader(); rd.onload = () => loadUserImage(rd.result, true); rd.readAsDataURL(f); e.target.value = '';
+  });
 
   /* ---------- sound (Web Audio, synthesized) ---------- */
   const Snd = {
@@ -887,11 +848,11 @@ function build3D() {
     let c = 0;
     for (let ri = 0; ri < 12; ri++) for (let n = 1; n <= PER_ROW; n++) {
       const id = idOf(ri, n); if (!state.sold.has(id) || id === current) continue;
-      const r = rng(ri * 131 + n * 17 + 5), sc = 0.9 + r() * 0.22, lean = (r() - 0.5) * 0.08;
+      const r = rng(ri * 131 + n * 17 + 5), sc = 0.95 + r() * 0.1, lean = (r() - 0.5) * 0.08;
       const x = seatX(n) + lean, y = rowFloor(ri), z = rowZ(ri) + 0.08, rec = ri >= 10;
       dmy.rotation.set(rec ? 0.12 : 0, 0, lean); dmy.scale.set(1.15, sc, 0.75);
-      dmy.position.set(x, y + (rec ? 0.84 : 0.86) * sc + 0.08, z + (rec ? 0.06 : 0)); dmy.updateMatrix(); torsos.setMatrixAt(c, dmy.matrix);
-      dmy.scale.set(1, 1.15, 1); dmy.position.set(x + lean * 2, y + 0.08 + 1.2 * sc - (rec ? 0.05 : 0), z + (rec ? 0.1 : 0)); dmy.updateMatrix(); heads.setMatrixAt(c, dmy.matrix);
+      dmy.position.set(x, y + 0.8 * sc, z + (rec ? 0.06 : 0)); dmy.updateMatrix(); torsos.setMatrixAt(c, dmy.matrix);
+      dmy.scale.set(1, 1.15, 1); dmy.position.set(x + lean * 2, y + 1.15 * sc - (rec ? 0.03 : 0), z + (rec ? 0.1 : 0)); dmy.updateMatrix(); heads.setMatrixAt(c, dmy.matrix);
       heads.setColorAt(c, hairCols[Math.floor(r() * hairCols.length)]); torsos.setColorAt(c, shirtCols[Math.floor(r() * shirtCols.length)]);
       c++;
     }
@@ -942,7 +903,7 @@ function build3D() {
   $('pvBook').addEventListener('click', () => { if (current) { toggleSeat(current); renderMini(); } });
 
   /* ---------- camera / flight ---------- */
-  const look = { yaw: 0, pitch: 0, tYaw: 0, tPitch: 0, fov: 55, tFov: 55 };
+  const look = { yaw: 0, pitch: 0, tYaw: 0, tPitch: 0, fov: 55, tFov: 55, base: 55 };
   let eye = new V(), flight = null;
   const baseQuat = p => { const m = new THREE.Matrix4().lookAt(p, SCREEN_C, new V(0, 1, 0)); return new THREE.Quaternion().setFromRotationMatrix(m); };
   const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -952,11 +913,11 @@ function build3D() {
   const toast = $('pvToast'); let toastTimer;
   function showToast(html, ms) { toast.innerHTML = html; toast.classList.remove('hide'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.add('hide'), ms); }
 
-  let houseT = 1, houseLvl = 1, showing = false, filmTime = 0, autoDim;
-  function setLights(on) { houseT = on ? 1 : 0; showing = !on; if (!on) { filmTime = 0; lastPhase = -1; } $('pvLights').setAttribute('aria-pressed', on); }
+  let houseT = 1, houseLvl = 1, autoDim;
+  function setLights(on) { houseT = on ? 1 : 0; if (!on) Snd.boom(0.6); $('pvLights').setAttribute('aria-pressed', on); }
   $('pvLights').addEventListener('click', () => { clearTimeout(autoDim); setLights(houseT < 0.5); });
   $('pvSound').addEventListener('click', () => { const v = !Snd.on; Snd.toggle(v); $('pvSound').setAttribute('aria-pressed', v); });
-  $('pvCenter').addEventListener('click', () => { look.tYaw = look.tPitch = 0; look.tFov = 55; });
+  $('pvCenter').addEventListener('click', () => { look.tYaw = look.tPitch = 0; look.tFov = look.base; });
 
   function goTo(id, intro) {
     const [ri, n] = parseId(id); const e = eyeOf(ri, n);
@@ -988,7 +949,7 @@ function build3D() {
     drag = { x: e.clientX, y: e.clientY };
   });
   canvas.addEventListener('pointerup', () => { drag = null; });
-  canvas.addEventListener('wheel', e => { e.preventDefault(); look.tFov = Math.max(28, Math.min(80, look.tFov + e.deltaY * 0.03)); }, { passive: false });
+  canvas.addEventListener('wheel', e => { e.preventDefault(); look.tFov = Math.max(28, Math.min(100, look.tFov + e.deltaY * 0.03)); }, { passive: false });
   addEventListener('keydown', e => {
     if (pv.hidden || !current) return;
     const [ri, n] = parseId(current);
@@ -1002,7 +963,7 @@ function build3D() {
     e.preventDefault();
   });
 
-  function resize() { const w = pv.clientWidth, h = pv.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  function resize() { const w = pv.clientWidth, h = pv.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; look.base = Math.max(55, Math.min(90, deg(2 * Math.atan(Math.tan(37.5 * Math.PI / 180) / camera.aspect)))); look.tFov = look.base; camera.updateProjectionMatrix(); }
   addEventListener('resize', () => { if (!pv.hidden) resize(); });
 
   /* ---------- loop ---------- */
@@ -1013,8 +974,7 @@ function build3D() {
     requestAnimationFrame(frame);
     const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
     houseLvl += (houseT - houseLvl) * Math.min(1, dt * 0.8);
-    if (showing) { filmTime += dt; glow = drawShow(filmTime, dt); } else glow = drawPre(now / 1000);
-    screenTex.needsUpdate = true;
+    glow = drawStill(now / 1000);
 
     /* camera */
     if (flight) {
@@ -1045,7 +1005,7 @@ function build3D() {
     coveMat.color.setRGB(0.03 + houseLvl * 0.8, 0.05 + houseLvl * 0.5, 0.2 + houseLvl * 0.1);
     const beam = (1 - houseLvl) * (0.02 + lum * 0.05);
     beamMat.uniforms.uOp.value = beam; lens.material.opacity = 0.25 + (1 - houseLvl) * 0.75;
-    dustMat.opacity = (1 - houseLvl) * (0.25 + lum * 0.6);
+    dustMat.opacity = (1 - houseLvl) * (0.08 + lum * 0.2);
     if (dustMat.opacity > 0.01) {
       const tt = now / 1000;
       for (let i = 0; i < DUST; i++) {
@@ -1067,10 +1027,27 @@ function build3D() {
     get current() { return current; },
     refreshSeats, updateBookBtn,
     enter(id) {
-      resize(); houseT = houseLvl = 1; showing = false; $('pvLights').setAttribute('aria-pressed', 'true');
-      look.tFov = look.fov = 55; camera.fov = 55; camera.updateProjectionMatrix();
+      resize(); houseT = houseLvl = 1; $('pvLights').setAttribute('aria-pressed', 'true');
+      look.tFov = look.fov = look.base; camera.fov = look.base; camera.updateProjectionMatrix();
       if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); }
       goTo(id, true);
+    },
+    sightCheck(fillAll) {
+      const keep = state.sold;
+      if (fillAll) { state.sold = new Set(); for (let ri = 0; ri < 12; ri++) for (let n = 1; n <= PER_ROW; n++) state.sold.add(idOf(ri, n)); }
+      const rc = new THREE.Raycaster(), out = [], targets = [cushion, backrest, arms, heads, torsos];
+      for (let ri = 0; ri < 12; ri++) for (let n = 1; n <= PER_ROW; n++) {
+        current = idOf(ri, n); refreshSeats(); targets.forEach(t => t.updateMatrixWorld(true));
+        const e = eyeOf(ri, n), o = new V(e.x, e.y, e.z); let blocked = 0;
+        for (let k = 0; k <= 4; k++) {
+          const p = new V(-SCR.w / 2 + SCR.w * k / 4, SCR.bottom + 0.1, SCR.z), d = p.clone().sub(o), L = d.length();
+          rc.set(o, d.normalize()); rc.near = 0.35; rc.far = L;
+          if (rc.intersectObjects(targets, false).length) blocked++;
+        }
+        if (blocked) out.push(current + ':' + blocked);
+      }
+      state.sold = keep; refreshSeats();
+      return out;
     },
     exit() { clearTimeout(autoDim); if (Snd.ctx) Snd.toggle(false); $('pvSound').setAttribute('aria-pressed', 'false'); document.querySelectorAll('.seat.viewing').forEach(b => b.classList.remove('viewing')); },
     stop() { running = false; }
@@ -1079,6 +1056,7 @@ function build3D() {
 
 /* ---------------- boot ---------------- */
 genSold(); renderPickers(); renderMap(); updateBar();
+window.SeatView = { sightCheck: fillAll => (T ? T.sightCheck(fillAll) : null) };
 paintPoster();
 if (reduce) { paintHero(); addEventListener('resize', paintHero); } else requestAnimationFrame(heroLoop);
 })();
